@@ -1,5 +1,6 @@
 "use client";
 import { CardSpotlight } from "./ui/card-spotlight";
+import { CardContainer, CardBody, CardItem } from "./ui/3d-card";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 
@@ -35,41 +36,76 @@ export function WalletHealthWidget({ walletAddress }: WalletHealthProps) {
 
   if (!walletAddress) {
     return (
-      <CardSpotlight className="h-64 w-full">
-        <div className="relative z-20 flex flex-col items-center justify-center h-full text-center p-6">
-          <div className="h-16 w-16 rounded-full bg-gray-800 flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+      <CardContainer className="inter-var h-64 w-full">
+        <CardBody className="bg-black/80 relative group/card hover:shadow-2xl hover:shadow-blue-500/[0.1] border-white/[0.1] w-full h-full rounded-xl border backdrop-blur-sm">
+          <div className="relative z-20 flex flex-col items-center justify-center h-full text-center p-6">
+            <CardItem translateZ="50" className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </CardItem>
+            <CardItem translateZ="60" as="h3" className="text-xl font-bold text-white mb-2">Connect Your Wallet</CardItem>
+            <CardItem translateZ="40" as="p" className="text-neutral-400 text-sm mb-6">
+              Connect your wallet to see your security health score
+            </CardItem>
+          
+            {/* Enhanced Connect Button */}
+            <CardItem translateZ="80" className="w-full max-w-xs">
+              <button 
+                onClick={() => {
+                  // This would trigger the wallet connection
+                  console.log("Connect wallet clicked");
+                }}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 group"
+              >
+                <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Connect Wallet</span>
+              </button>
+              
+              {/* Supported Wallets */}
+              <div className="mt-4 flex items-center justify-center space-x-3">
+                <div className="text-xs text-neutral-500">Supports:</div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
+                    <span className="text-orange-400 text-xs font-bold">M</span>
+                  </div>
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                    <span className="text-blue-400 text-xs font-bold">T</span>
+                  </div>
+                  <div className="w-6 h-6 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
+                    <span className="text-purple-400 text-xs font-bold">W</span>
+                  </div>
+                </div>
+              </div>
+            </CardItem>
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>
-          <p className="text-neutral-400 text-sm">
-            Connect your wallet to see your security health score
-          </p>
-        </div>
-      </CardSpotlight>
+        </CardBody>
+      </CardContainer>
     );
   }
 
   return (
-    <CardSpotlight className="h-96 w-full">
-      <div className="relative z-20 h-full p-6">
+    <CardContainer className="inter-var h-96 w-full">
+      <CardBody className="bg-black/80 relative group/card hover:shadow-2xl hover:shadow-green-500/[0.1] border-white/[0.1] w-full h-full rounded-xl p-6 border backdrop-blur-sm">
+        <div className="relative z-20 h-full">
         
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <CardItem translateZ="50" className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white">Wallet Health</h3>
           <div className={`px-3 py-1 rounded-full border ${getRiskBadgeColor(healthData.riskLevel)}`}>
             <span className="text-sm font-medium">{healthData.riskLevel} Risk</span>
           </div>
-        </div>
+        </CardItem>
 
         {/* Health Score Circle */}
-        <div className="flex items-center justify-center mb-6">
+        <CardItem translateZ="80" className="flex items-center justify-center mb-6">
           <div className="relative w-32 h-32">
             <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
               {/* Background circle */}
               <path
-                className="text-gray-800"
+                className="text-gray-700"
                 stroke="currentColor"
                 strokeWidth="3"
                 fill="none"
@@ -97,12 +133,12 @@ export function WalletHealthWidget({ walletAddress }: WalletHealthProps) {
               </div>
             </div>
           </div>
-        </div>
+        </CardItem>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <CardItem translateZ="60" className="grid grid-cols-2 gap-4">
           <motion.div 
-            className="bg-neutral-900/50 rounded-lg p-4 border border-neutral-800"
+            className="bg-neutral-900/70 rounded-lg p-4 border border-neutral-700/50 backdrop-blur-sm"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
@@ -111,7 +147,7 @@ export function WalletHealthWidget({ walletAddress }: WalletHealthProps) {
           </motion.div>
           
           <motion.div 
-            className="bg-neutral-900/50 rounded-lg p-4 border border-neutral-800"
+            className="bg-neutral-900/70 rounded-lg p-4 border border-neutral-700/50 backdrop-blur-sm"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
@@ -120,7 +156,7 @@ export function WalletHealthWidget({ walletAddress }: WalletHealthProps) {
           </motion.div>
           
           <motion.div 
-            className="bg-neutral-900/50 rounded-lg p-4 border border-neutral-800"
+            className="bg-neutral-900/70 rounded-lg p-4 border border-neutral-700/50 backdrop-blur-sm"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
@@ -129,7 +165,7 @@ export function WalletHealthWidget({ walletAddress }: WalletHealthProps) {
           </motion.div>
           
           <motion.div 
-            className="bg-neutral-900/50 rounded-lg p-4 border border-neutral-800"
+            className="bg-neutral-900/70 rounded-lg p-4 border border-neutral-700/50 backdrop-blur-sm"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
@@ -138,8 +174,9 @@ export function WalletHealthWidget({ walletAddress }: WalletHealthProps) {
               Last Scan: {isClient ? healthData.lastScan : "Loading..."}
             </div>
           </motion.div>
+        </CardItem>
         </div>
-      </div>
-    </CardSpotlight>
+      </CardBody>
+    </CardContainer>
   );
 }
