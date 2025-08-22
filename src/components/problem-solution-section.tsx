@@ -52,21 +52,21 @@ const problemSolutionItems = [
   {
     title: "🚨 Security Threats",
     description: "Problem",
-    link: "#",
+    link: "#security-threats",
     details: "$3.8B+ lost to hacks, scams, and exploits. Users can't identify threats.",
     solution: "Our AI Security Scanner provides instant threat detection with 90% accuracy in under 3 seconds."
   },
   {
     title: "🤯 Too Complex",
     description: "Problem", 
-    link: "#",
+    link: "#too-complex",
     details: "Crypto terminology is incomprehensible. 'Impermanent loss' means what exactly?",
     solution: "Smart Translator converts complex jargon into plain English that anyone can understand."
   },
   {
     title: "💸 Market Manipulation",
     description: "Problem",
-    link: "#",
+    link: "#market-manipulation",
     details: "Pump and dump schemes, rug pulls, and fake projects prey on newcomers.",
     solution: "Contract Auditor grades smart contracts and identifies potential scams before you invest."
   },
