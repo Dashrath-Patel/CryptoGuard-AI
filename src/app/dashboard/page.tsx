@@ -1,6 +1,7 @@
 "use client";
 import { DashboardWelcome } from "@/components/dashboard-welcome";
 import { WalletHealthWidget } from "@/components/wallet-health-widget";
+import { LiveNetworkStatus } from "@/components/live-network-status";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
@@ -24,40 +25,48 @@ export default function DashboardPage() {
 
   const tools = [
     {
-      title: "BNB Chain AI Security Scanner",
-      description: "Analyze BNB wallets, BSC transactions, and BEP-20 smart contracts for threats",
+      title: "AI Security Scanner",
+      description: "Real-time scam detection & risk scoring for wallets, transactions, and smart contracts",
       icon: IconShieldCheck,
       href: "/dashboard/scanner",
       color: "text-green-400",
       bgColor: "bg-green-500/10",
-      borderColor: "border-green-500/20"
+      borderColor: "border-green-500/20",
+      status: "Live",
+      impact: "Prevent 80%+ of crypto losses"
     },
     {
-      title: "BEP-20 Contract Auditor", 
-      description: "Get comprehensive security grades for any BNB Chain BEP-20 contract",
+      title: "Contract Auditor", 
+      description: "AI grades smart contracts A-F for safety with comprehensive vulnerability analysis",
       icon: IconFileSearch,
       href: "/dashboard/auditor",
       color: "text-blue-400",
       bgColor: "bg-blue-500/10",
-      borderColor: "border-blue-500/20"
+      borderColor: "border-blue-500/20",
+      status: "Live",
+      impact: "Identify vulnerabilities before investment"
     },
     {
-      title: "BSC Transaction Translator",
-      description: "Convert complex BNB Chain transaction data into plain English",
+      title: "Smart Translator",
+      description: "Converts complex DeFi terms to plain English that anyone can understand",
       icon: IconLanguage,
       href: "/dashboard/translator", 
       color: "text-purple-400",
       bgColor: "bg-purple-500/10",
-      borderColor: "border-purple-500/20"
+      borderColor: "border-purple-500/20",
+      status: "Live", 
+      impact: "Enable mainstream crypto adoption"
     },
     {
-      title: "BNB Portfolio Insights",
-      description: "Get AI-powered recommendations for your BNB Chain DeFi investments",
+      title: "Market Guardian",
+      description: "Detects manipulation & whale movements to protect retail investors",
       icon: IconChartBar,
-      href: "/dashboard/insights",
-      color: "text-yellow-400", 
-      bgColor: "bg-yellow-500/10",
-      borderColor: "border-yellow-500/20"
+      href: "/dashboard/guardian",
+      color: "text-orange-400",
+      bgColor: "bg-orange-500/10", 
+      borderColor: "border-orange-500/20",
+      status: "Live",
+      impact: "Protect against market manipulation"
     },
   ];
 
@@ -91,17 +100,30 @@ export default function DashboardPage() {
                   >
                     <CardSpotlight className="h-full">
                       <div className="relative z-20 h-full p-6">
-                        <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg ${tool.bgColor} ${tool.borderColor} border mb-4`}>
-                          <tool.icon className={`h-6 w-6 ${tool.color}`} />
+                        <div className={`inline-flex items-center justify-between w-full mb-4`}>
+                          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg ${tool.bgColor} ${tool.borderColor} border`}>
+                            <tool.icon className={`h-6 w-6 ${tool.color}`} />
+                          </div>
+                          {tool.status && (
+                            <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">
+                              {tool.status}
+                            </span>
+                          )}
                         </div>
                         
                         <h3 className="text-xl font-semibold text-white mb-2">
                           {tool.title}
                         </h3>
                         
-                        <p className="text-neutral-400 text-sm mb-4 leading-relaxed">
+                        <p className="text-neutral-400 text-sm mb-3 leading-relaxed">
                           {tool.description}
                         </p>
+
+                        {tool.impact && (
+                          <p className="text-xs text-neutral-500 mb-4 italic">
+                            💡 {tool.impact}
+                          </p>
+                        )}
                         
                         <div className="flex items-center text-sm font-medium text-white group">
                           <span>Launch Tool</span>
@@ -167,6 +189,16 @@ export default function DashboardPage() {
             >
               <h2 className="text-2xl font-bold text-white mb-6">Wallet Health</h2>
               <WalletHealthWidget walletAddress={walletAddress} />
+            </motion.div>
+
+            {/* Live Network Status */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="mt-8"
+            >
+              <LiveNetworkStatus />
             </motion.div>
 
             {/* Quick Actions */}

@@ -30,13 +30,17 @@ interface Transaction {
   value: string;
   timestamp: Date;
   riskLevel: 'low' | 'medium' | 'high';
+  type?: string;
+  status?: 'success' | 'failed';
 }
 
 export default function SecurityScannerPage() {
   const [walletAddress, setWalletAddress] = useState("");
   const [contractAddress, setContractAddress] = useState("");
+  const [transactionHash, setTransactionHash] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [scanResults, setScanResults] = useState<ScanResult | null>(null);
+  const [transactionResults, setTransactionResults] = useState<any>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [activeTab, setActiveTab] = useState<'wallet' | 'contract' | 'transaction'>('wallet');
 
@@ -68,27 +72,27 @@ export default function SecurityScannerPage() {
       const result = await response.json();
       setScanResults(result);
 
-      // Mock recent transactions for demo
-      const mockTransactions: Transaction[] = [
-        {
-          hash: "0x1234...5678",
-          from: walletAddress,
-          to: "0xabcd...efgh",
-          value: "0.5 BNB",
-          timestamp: new Date(Date.now() - 3600000),
-          riskLevel: 'low'
-        },
-        {
-          hash: "0x9876...5432",
-          from: "0xdef0...1234",
-          to: walletAddress,
-          value: "100 USDT",
-          timestamp: new Date(Date.now() - 7200000),
-          riskLevel: 'low'
-        }
-      ];
+      // Fetch real recent transactions for the wallet
+      try {
+        const txResponse = await fetch('/api/scanner/wallet-transactions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address: walletAddress }),
+        });
 
-      setRecentTransactions(mockTransactions);
+        if (txResponse.ok) {
+          const txData = await txResponse.json();
+          if (txData.success && txData.transactions) {
+            setRecentTransactions(txData.transactions);
+          }
+        }
+      } catch (txError) {
+        console.error("Failed to fetch transactions:", txError);
+        // Keep empty transactions array if fetch fails
+        setRecentTransactions([]);
+      }
     } catch (error) {
       console.error("Scan failed:", error);
       // Handle error state
@@ -118,6 +122,33 @@ export default function SecurityScannerPage() {
       setScanResults(result);
     } catch (error) {
       console.error("Contract scan failed:", error);
+      // Handle error state
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const performTransactionScan = async () => {
+    if (!transactionHash) return;
+
+    setIsScanning(true);
+    try {
+      const response = await fetch('/api/scanner/transaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ txHash: transactionHash }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze transaction');
+      }
+
+      const result = await response.json();
+      setTransactionResults(result);
+    } catch (error) {
+      console.error("Transaction scan failed:", error);
       // Handle error state
     } finally {
       setIsScanning(false);
@@ -159,6 +190,10 @@ export default function SecurityScannerPage() {
               <span className="text-yellow-400">BNB Chain (BSC) Network</span>
             </div>
             <div className="text-neutral-500">Chain ID: 56</div>
+            <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+              <div className="h-2 w-2 bg-green-400 rounded-full"></div>
+              <span className="text-green-400">Real Data Mode</span>
+            </div>
           </div>
         </motion.div>
 
@@ -281,7 +316,41 @@ export default function SecurityScannerPage() {
                 )}
 
                 {activeTab === 'transaction' && (
-                  <TransactionMonitor walletAddress={walletAddress} />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-300 mb-2">
+                        BNB Chain Transaction Hash
+                      </label>
+                      <input
+                        type="text"
+                        value={transactionHash}
+                        onChange={(e) => setTransactionHash(e.target.value)}
+                        placeholder="0x1234567890abcdef..."
+                        className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:border-blue-500 focus:outline-none"
+                      />
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Enter a BNB Chain transaction hash to analyze for security threats
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={performTransactionScan}
+                      disabled={!transactionHash || isScanning}
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-neutral-700 disabled:to-neutral-800 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    >
+                      {isScanning ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          Analyzing Transaction...
+                        </>
+                      ) : (
+                        <>
+                          <IconScan className="h-5 w-5" />
+                          Analyze Transaction
+                        </>
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
             </CardSpotlight>
@@ -369,18 +438,50 @@ export default function SecurityScannerPage() {
                         <div className="space-y-2">
                           {recentTransactions.map((tx, index) => (
                             <div key={index} className="bg-neutral-900 rounded p-3">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm font-mono text-blue-400">{tx.hash}</span>
-                                <span className={`text-xs px-2 py-1 rounded ${
-                                  tx.riskLevel === 'low' ? 'bg-green-500/20 text-green-400' :
-                                  tx.riskLevel === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                                  'bg-red-500/20 text-red-400'
-                                }`}>
-                                  {tx.riskLevel} risk
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-mono text-blue-400">
+                                  {tx.hash.slice(0, 10)}...{tx.hash.slice(-8)}
                                 </span>
+                                <div className="flex items-center gap-2">
+                                  {tx.status === 'failed' && (
+                                    <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400">
+                                      Failed
+                                    </span>
+                                  )}
+                                  <span className={`text-xs px-2 py-1 rounded ${
+                                    tx.riskLevel === 'low' ? 'bg-green-500/20 text-green-400' :
+                                    tx.riskLevel === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                                    'bg-red-500/20 text-red-400'
+                                  }`}>
+                                    {tx.riskLevel} risk
+                                  </span>
+                                </div>
                               </div>
-                              <div className="text-sm text-neutral-400">
-                                {tx.value} • {tx.timestamp.toLocaleTimeString()}
+                              <div className="text-sm text-neutral-400 space-y-1">
+                                <div className="flex justify-between">
+                                  <span>Type:</span>
+                                  <span className="text-white">{tx.type || 'Transfer'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Value:</span>
+                                  <span className="text-white">{tx.value}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>From:</span>
+                                  <span className="font-mono text-xs">
+                                    {tx.from === walletAddress ? 'Your Wallet' : `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>To:</span>
+                                  <span className="font-mono text-xs">
+                                    {tx.to === walletAddress ? 'Your Wallet' : `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Time:</span>
+                                  <span>{tx.timestamp.toLocaleString()}</span>
+                                </div>
                               </div>
                             </div>
                           ))}
