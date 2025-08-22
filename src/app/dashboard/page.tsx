@@ -5,6 +5,7 @@ import { LiveNetworkStatus } from "@/components/live-network-status";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
+import { NoSSR } from "@/components/no-ssr";
 import { 
   IconShieldCheck, 
   IconFileSearch, 
@@ -14,6 +15,14 @@ import {
 } from "@tabler/icons-react";
 
 export default function DashboardPage() {
+  return (
+    <NoSSR>
+      <DashboardContent />
+    </NoSSR>
+  );
+}
+
+function DashboardContent() {
   const [walletAddress, setWalletAddress] = useState<string>("");
 
   useEffect(() => {
@@ -22,6 +31,7 @@ export default function DashboardPage() {
       setWalletAddress(address);
     }
   }, []);
+
 
   const tools = [
     {
@@ -72,8 +82,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Welcome Section */}
+      {/* Header Section */}
+      <div className="container mx-auto px-4 pt-8">
         <DashboardWelcome />
 
         {/* Main Content Grid */}
@@ -134,50 +144,34 @@ export default function DashboardPage() {
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
+            </CardSpotlight>
 
-            {/* Recent Activity */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="mt-8"
-            >
-              <h2 className="text-2xl font-bold text-white mb-6">Recent Activity</h2>
-              
-              <CardSpotlight>
-                <div className="relative z-20 p-6">
-                  {walletAddress ? (
-                    <div className="space-y-4">
-                      {[
-                        { action: "Security scan completed", time: "2 hours ago", status: "✅ Safe" },
-                        { action: "Contract audit requested", time: "1 day ago", status: "📊 Grade: B+" },
-                        { action: "Translation completed", time: "2 days ago", status: "📝 Simplified" },
-                      ].map((activity, index) => (
-                        <div key={index} className="flex items-center justify-between py-2 border-b border-neutral-800 last:border-b-0">
-                          <div>
-                            <div className="text-white font-medium">{activity.action}</div>
-                            <div className="text-neutral-400 text-sm">{activity.time}</div>
-                          </div>
-                          <div className="text-sm font-medium text-green-400">
-                            {activity.status}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="text-neutral-400 mb-4">
-                        Connect your wallet to see your activity history
-                      </div>
-                      <div className="text-sm text-neutral-500">
-                        Once connected, you&apos;ll see scans, audits, and translations here
-                      </div>
-                    </div>
-                  )}
+            {/* Exploit Translator */}
+            <CardSpotlight className="h-80 w-full">
+              <div className="text-white relative z-20 p-6 h-full flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center mb-4">
+                    <IconLanguage className="h-8 w-8 text-green-400 mr-3" />
+                    <h3 className="text-xl font-bold">Exploit Translator</h3>
+                  </div>
+                  <p className="text-neutral-300">
+                    Translate complex security exploits into human-readable explanations.
+                  </p>
                 </div>
-              </CardSpotlight>
-            </motion.div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold flex items-center"
+                  onClick={() => {
+                    // Navigate to translator tool
+                    console.log("Navigate to Exploit Translator");
+                  }}
+                >
+                  Translate
+                  <IconArrowRight className="ml-2 h-4 w-4" />
+                </motion.button>
+              </div>
+            </CardSpotlight>
           </div>
 
           {/* Right Column - Wallet Health */}
