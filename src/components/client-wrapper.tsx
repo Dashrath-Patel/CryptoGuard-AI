@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { WalletProvider } from '@/contexts/WalletContext';
 
 interface ClientWrapperProps {
   children: React.ReactNode;
@@ -24,5 +25,9 @@ export function ClientWrapper({ children }: ClientWrapperProps) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <WalletProvider>
+      {children}
+    </WalletProvider>
+  );
 }

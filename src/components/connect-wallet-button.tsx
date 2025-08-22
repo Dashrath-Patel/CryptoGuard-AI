@@ -1,111 +1,117 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { HoverBorderGradient } from "./ui/hover-border-gradient";
+import React from 'react';
+import { motion } from 'motion/react';
+import { useWallet } from '@/contexts/WalletContext';
+import { 
+  IconWallet, 
+  IconPlugConnected, 
+  IconLogout, 
+  IconAlertTriangle,
+  IconLoader2
+} from '@tabler/icons-react';
 
 export function ConnectWalletButton() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState("");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const { 
+    isConnected, 
+    walletAddress, 
+    balance, 
+    chainId, 
+    connectWallet, 
+    disconnectWallet, 
+    isConnecting, 
+    error 
+  } = useWallet();
 
-  // Simulate wallet connection (replace with actual Web3 integration)
-  const connectWallet = async () => {
-    setIsConnecting(true);
-    
-    try {
-      // Simulate connection delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Mock wallet address (replace with actual wallet connection)
-      const mockAddress = "0x2907B83aA538cb6dC8Fe08cb6286b0B8e259d25e";
-      setWalletAddress(mockAddress);
-      setIsConnected(true);
-      
-      // Store in localStorage for persistence
-      localStorage.setItem("walletConnected", "true");
-      localStorage.setItem("walletAddress", mockAddress);
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const disconnectWallet = () => {
-    setIsConnected(false);
-    setWalletAddress("");
-    localStorage.removeItem("walletConnected");
-    localStorage.removeItem("walletAddress");
-  };
-
-  // Check for existing connection on component mount
-  useEffect(() => {
-    setIsClient(true);
-    
-    const connected = localStorage.getItem("walletConnected");
-    const address = localStorage.getItem("walletAddress");
-    
-    if (connected === "true" && address) {
-      setIsConnected(true);
-      setWalletAddress(address);
-    }
-  }, []);
-
-  const truncateAddress = (address: string) => {
-    if (!address) return "";
+  const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Prevent hydration mismatch by not rendering connected state until client-side
-  if (!isClient) {
-    return (
-      <HoverBorderGradient
-        containerClassName="rounded-full"
-        as="button"
-        className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2 opacity-50"
-      >
-        <span>Loading...</span>
-      </HoverBorderGradient>
-    );
-  }
+  const getNetworkName = (chainId: number | null) => {
+    switch (chainId) {
+      case 56:
+        return 'BSC Mainnet';
+      case 97:
+        return 'BSC Testnet';
+      default:
+        return 'Unknown Network';
+    }
+  };
 
-  if (isConnected) {
+  if (isConnected && walletAddress) {
     return (
-      <div className="flex items-center gap-2">
-        <div className="px-3 py-2 bg-green-900/20 border border-green-500/20 rounded-lg">
-          <span className="text-green-400 text-sm font-mono">
-            {truncateAddress(walletAddress)}
-          </span>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex items-center gap-3"
+      >
+        {/* Wallet Info Card */}
+        <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-xl p-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <IconPlugConnected className="h-5 w-5 text-green-400" />
+              <div className="text-left">
+                <div className="text-sm font-medium text-white">
+                  {formatAddress(walletAddress)}
+                </div>
+                <div className="text-xs text-neutral-400">
+                  {balance} BNB • {getNetworkName(chainId)}
+                </div>
+              </div>
+            </div>
+            
+            <button
+              onClick={disconnectWallet}
+              className="ml-3 p-2 hover:bg-red-500/20 rounded-lg transition-colors group"
+              title="Disconnect Wallet"
+            >
+              <IconLogout className="h-4 w-4 text-red-400 group-hover:text-red-300" />
+            </button>
+          </div>
         </div>
-        <button
-          onClick={disconnectWallet}
-          className="px-3 py-2 text-red-400 hover:text-red-300 text-sm transition-colors"
-        >
-          Disconnect
-        </button>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <HoverBorderGradient
-      containerClassName="rounded-full"
-      as="button"
-      onClick={isConnecting ? undefined : connectWallet}
-      className={`dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2 ${
-        isConnecting ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-    >
-      {isConnecting ? (
-        <>
-          <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-          <span>Connecting...</span>
-        </>
-      ) : (
-        <>
-          <span>Connect Wallet</span>
-        </>
+    <div className="flex flex-col items-center gap-3">
+      {/* Connect Button */}
+      <motion.button
+        onClick={connectWallet}
+        disabled={isConnecting}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-3 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
+      >
+        {isConnecting ? (
+          <>
+            <IconLoader2 className="h-5 w-5 animate-spin" />
+            <span>Connecting...</span>
+          </>
+        ) : (
+          <>
+            <IconWallet className="h-5 w-5" />
+            <span>Connect Wallet</span>
+          </>
+        )}
+        
+        {/* Animated background */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-400 opacity-0 hover:opacity-20 transition-opacity"
+          layoutId="wallet-button-bg"
+        />
+      </motion.button>
+
+      {/* Error Message */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3 max-w-md"
+        >
+          <IconAlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <span>{error}</span>
+        </motion.div>
       )}
-    </HoverBorderGradient>
+    </div>
   );
 }
