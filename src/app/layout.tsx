@@ -35,7 +35,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
       >
-        {/* Temporarily using direct connection without Web3Provider */}x``
+        {/* Temporarily using direct connection without Web3Provider */}
         <ClientWrapper>
           {children}
         </ClientWrapper>
