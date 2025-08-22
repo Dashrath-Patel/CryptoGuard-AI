@@ -4,9 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "start:prod": "NODE_ENV=production next start -p 3000",
+    "export": "next export",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "type-check": "tsc --noEmit",
+    "docker:build": "docker build -t cryptoguard-ai .",
+    "docker:run": "docker run -p 3000:3000 cryptoguard-ai",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop cryptoguard-ai",
+    "pm2:restart": "pm2 restart cryptoguard-ai",
+    "pm2:delete": "pm2 delete cryptoguard-ai",
+    "deploy:vercel": "vercel --prod"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
