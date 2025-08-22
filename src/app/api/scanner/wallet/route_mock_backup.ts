@@ -2,37 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BNBChainSecurityScanner } from '@/lib/bnb-chain-security-scanner';
 
-// Helper functions for BNB Chain data
-async function getBNBGasPrice(): Promise<string> {
-  try {
-    const response = await fetch(`https://api.bscscan.com/api?module=gastracker&action=gasoracle&apikey=${process.env.BSCSCAN_API_KEY}`);
-    const data = await response.json();
-    return data.status === '1' ? `${data.result.SafeGasPrice} gwei` : '5 gwei';
-  } catch {
-    return '5 gwei';
-  }
-}
-
-async function getLatestBlockNumber(): Promise<number> {
-  try {
-    const response = await fetch(`https://api.bscscan.com/api?module=proxy&action=eth_blockNumber&apikey=${process.env.BSCSCAN_API_KEY}`);
-    const data = await response.json();
-    return data.result ? parseInt(data.result, 16) : 12345678;
-  } catch {
-    return 12345678;
-  }
-}
-
-async function getBNBPrice(): Promise<string> {
-  try {
-    const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT');
-    const data = await response.json();
-    return data.price ? `$${parseFloat(data.price).toFixed(2)}` : '$300.50';
-  } catch {
-    return '$300.50';
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const { address } = await request.json();
@@ -104,25 +73,29 @@ export async function POST(request: NextRequest) {
         mockAnalysis.riskScore += 15;
       }
 
-      if (Math.random() > 0.85) {
-        mockAnalysis.threats.push('Multiple DeFi yield farming activities');
-        mockAnalysis.riskScore += 10;
-      }
-
-      // Determine final status
-      if (mockAnalysis.riskScore > 60) {
-        mockAnalysis.status = 'danger';
-      } else if (mockAnalysis.riskScore > 30) {
-        mockAnalysis.status = 'warning';
-      }
-
       return NextResponse.json(mockAnalysis);
     }
+      mockAnalysis.riskScore += 15;
+    }
+
+    if (Math.random() > 0.85) {
+      mockAnalysis.threats.push('Multiple DeFi yield farming activities');
+      mockAnalysis.riskScore += 10;
+    }
+
+    // Adjust status based on risk score
+    if (mockAnalysis.riskScore > 60) {
+      mockAnalysis.status = 'danger';
+    } else if (mockAnalysis.riskScore > 30) {
+      mockAnalysis.status = 'warning';
+    }
+
+    return NextResponse.json(mockAnalysis);
 
   } catch (error) {
-    console.error('Wallet analysis failed:', error);
+    console.error('BNB wallet analysis error:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze wallet' },
+      { error: 'Failed to analyze BNB Chain wallet' },
       { status: 500 }
     );
   }
