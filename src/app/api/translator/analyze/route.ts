@@ -13,6 +13,33 @@ interface Translation {
 
 // Enhanced crypto dictionary with more terms (fallback for when Gemini is unavailable)
 const cryptoDictionary: { [key: string]: Translation } = {
+  'crypto': {
+    term: 'Cryptocurrency',
+    simpleDef: 'Digital money that uses encryption to secure transactions. Like digital cash that you can send anywhere in the world without banks.',
+    technicalDef: 'A digital or virtual currency that is secured by cryptography and operates independently of a central bank.',
+    example: 'Bitcoin, Ethereum, and BNB are popular cryptocurrencies you can buy, sell, and trade.',
+    category: 'Basics',
+    riskLevel: 'Medium',
+    relatedTerms: ['blockchain', 'bitcoin', 'digital currency', 'decentralized']
+  },
+  'cryptocurrency': {
+    term: 'Cryptocurrency',
+    simpleDef: 'Digital money that uses encryption to secure transactions. Like digital cash that you can send anywhere in the world without banks.',
+    technicalDef: 'A digital or virtual currency that is secured by cryptography and operates independently of a central bank.',
+    example: 'Bitcoin, Ethereum, and BNB are popular cryptocurrencies you can buy, sell, and trade.',
+    category: 'Basics',
+    riskLevel: 'Medium',
+    relatedTerms: ['blockchain', 'bitcoin', 'digital currency', 'decentralized']
+  },
+  'bitcoin': {
+    term: 'Bitcoin',
+    simpleDef: 'The first and most famous cryptocurrency. Think of it as digital gold - limited supply and valuable.',
+    technicalDef: 'A decentralized digital currency created by an unknown person using the pseudonym Satoshi Nakamoto.',
+    example: 'Bitcoin reached an all-time high of over $60,000 in 2021, making early investors very wealthy.',
+    category: 'Currency',
+    riskLevel: 'Medium',
+    relatedTerms: ['BTC', 'satoshi', 'mining', 'blockchain']
+  },
   'impermanent loss': {
     term: 'Impermanent Loss',
     simpleDef: 'When you provide liquidity to a trading pool, you might end up with less money than if you just held your tokens. It\'s called "impermanent" because it only becomes real when you withdraw.',
@@ -263,30 +290,40 @@ function analyzeText(text: string): Translation[] {
   const foundTerms: Translation[] = [];
   const textLower = text.toLowerCase();
 
+  console.log('Analyzing text:', textLower);
+
   // Look for known terms in the text
   for (const [term, translation] of Object.entries(cryptoDictionary)) {
     if (textLower.includes(term.toLowerCase())) {
       foundTerms.push(translation);
+      console.log('Found exact match:', term);
     }
   }
 
   // If no exact matches, try to identify potential crypto terms
   if (foundTerms.length === 0) {
+    console.log('No exact matches, trying pattern matching...');
+    
     const cryptoPatterns = [
+      /\b(crypto|cryptocurrency|bitcoin|btc|ethereum|eth|bnb|binance)\b/gi,
       /\b(defi|yield|farming|staking|liquidity|pool|swap|bridge|dex|cex)\b/gi,
       /\b(token|coin|nft|dao|governance|voting|proposal)\b/gi,
       /\b(wallet|metamask|trustwallet|seed|phrase|private|key)\b/gi,
       /\b(bull|bear|market|pump|dump|moon|whale|hodl)\b/gi,
-      /\b(gas|fee|transaction|block|confirmation|miner)\b/gi
+      /\b(gas|fee|transaction|block|confirmation|miner|mining)\b/gi,
+      /\b(blockchain|smart|contract|address|hash)\b/gi
     ];
 
     const matches = new Set<string>();
     for (const pattern of cryptoPatterns) {
       const found = text.match(pattern);
       if (found) {
+        console.log('Pattern match found:', found);
         found.forEach(match => matches.add(match.toLowerCase()));
       }
     }
+
+    console.log('All pattern matches:', Array.from(matches));
 
     // Generate explanations for common patterns
     if (matches.size > 0) {
@@ -294,6 +331,7 @@ function analyzeText(text: string): Translation[] {
     }
   }
 
+  console.log('Final found terms:', foundTerms.length);
   return foundTerms.slice(0, 5); // Limit results
 }
 
