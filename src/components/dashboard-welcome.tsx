@@ -48,25 +48,33 @@ export function DashboardWelcome() {
       id: 1,
       name: "AI Security Scanner",
       designation: "Threat Detection",
-      image: "/api/placeholder/32/32", // You can replace with actual avatars
+      image: "🛡️",
+      color: "bg-green-500",
+      icon: "🔍"
     },
     {
       id: 2,
-      name: "Contract Auditor",
+      name: "Contract Auditor", 
       designation: "Smart Contract Analysis",
-      image: "/api/placeholder/32/32",
+      image: "📋",
+      color: "bg-blue-500",
+      icon: "⚡"
     },
     {
       id: 3,
       name: "Smart Translator",
-      designation: "Plain English Conversion",
-      image: "/api/placeholder/32/32",
+      designation: "Plain English Conversion", 
+      image: "🔤",
+      color: "bg-purple-500",
+      icon: "💬"
     },
     {
       id: 4,
       name: "Portfolio Insights",
       designation: "Investment Analysis",
-      image: "/api/placeholder/32/32",
+      image: "📊",
+      color: "bg-orange-500", 
+      icon: "💡"
     },
   ];
 
@@ -78,7 +86,7 @@ export function DashboardWelcome() {
         transition={{ duration: 0.6 }}
         className="relative"
       >
-        <div className="bg-gradient-to-r from-neutral-900/80 to-neutral-800/80 backdrop-blur-sm rounded-2xl p-6 border border-neutral-700 hover:border-neutral-600 transition-colors">
+        <div className="bg-gradient-to-r from-neutral-900/90 to-neutral-800/90 backdrop-blur-sm rounded-2xl p-6 border border-neutral-700 hover:border-neutral-600 transition-all duration-300 shadow-xl">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             {/* Welcome Message */}
             <div className="mb-4 md:mb-0">
@@ -93,7 +101,7 @@ export function DashboardWelcome() {
                   </p>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-green-400 font-mono text-sm">
+                    <span className="text-green-400 font-mono text-sm px-2 py-1 bg-green-500/10 rounded-md border border-green-500/20">
                       {truncateAddress(walletAddress)}
                     </span>
                   </div>
@@ -112,7 +120,9 @@ export function DashboardWelcome() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span className="text-blue-400 text-sm">System Online</span>
+                <span className="text-blue-400 text-sm px-2 py-1 bg-blue-500/10 rounded-md border border-blue-500/20">
+                  System Online
+                </span>
               </div>
             </div>
           </div>
@@ -132,31 +142,45 @@ export function DashboardWelcome() {
               <div className="flex flex-row items-center">
                 <AnimatedTooltip items={teamMembers} />
                 <div className="ml-4 text-right">
-                  <div className="text-green-400 text-sm font-semibold">All Systems Active</div>
-                  <div className="text-neutral-500 text-xs">Ready to protect you</div>
+                  <div className="text-green-400 text-sm font-semibold px-3 py-1 bg-green-500/10 rounded-md border border-green-500/20">
+                    All Systems Active
+                  </div>
+                  <div className="text-neutral-500 text-xs mt-1">Ready to protect you</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {/* Enhanced Quick Stats */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white">24/7</div>
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="text-center p-3 rounded-lg bg-neutral-800/50 border border-neutral-700 hover:border-neutral-600 transition-all duration-200"
+            >
+              <div className="text-2xl font-bold text-white mb-1">24/7</div>
               <div className="text-xs text-neutral-400">Protection</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">90%</div>
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="text-center p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 transition-all duration-200"
+            >
+              <div className="text-2xl font-bold text-blue-400 mb-1">90%</div>
               <div className="text-xs text-neutral-400">Accuracy</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">&lt;3s</div>
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/20 hover:border-green-500/40 transition-all duration-200"
+            >
+              <div className="text-2xl font-bold text-green-400 mb-1">&lt;3s</div>
               <div className="text-xs text-neutral-400">Scan Time</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-400">$3.8B</div>
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200"
+            >
+              <div className="text-2xl font-bold text-purple-400 mb-1">$3.8B</div>
               <div className="text-xs text-neutral-400">Protected</div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </motion.div>
