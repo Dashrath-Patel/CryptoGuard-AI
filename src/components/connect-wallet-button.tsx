@@ -19,7 +19,8 @@ export function ConnectWalletButton() {
     connectWallet, 
     disconnectWallet, 
     isConnecting, 
-    error 
+    error,
+    diagnoseWallet
   } = useWallet();
 
   const formatAddress = (address: string) => {
@@ -111,6 +112,18 @@ export function ConnectWalletButton() {
           <IconAlertTriangle className="h-4 w-4 flex-shrink-0" />
           <span>{error}</span>
         </motion.div>
+      )}
+
+      {/* Diagnostic Button (for debugging) */}
+      {error && (
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          onClick={diagnoseWallet}
+          className="text-xs text-neutral-400 hover:text-neutral-200 underline"
+        >
+          🔍 Run Wallet Diagnostic (Check Console)
+        </motion.button>
       )}
     </div>
   );

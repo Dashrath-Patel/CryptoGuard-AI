@@ -10,6 +10,7 @@ interface WalletContextType {
   disconnectWallet: () => void;
   isConnecting: boolean;
   error: string | null;
+  diagnoseWallet: () => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -51,27 +52,79 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   }, []);
 
   const checkIfWalletIsConnected = async () => {
+    console.log('🔍 Checking if wallet is already connected...');
+    
     try {
-      if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      // Enhanced wallet detection for initialization
+      const detectWallet = () => {
+        if (typeof window === 'undefined') {
+          console.log('❌ Window is undefined (SSR)');
+          return null;
+        }
+
+        console.log('🔍 Initial wallet detection...');
+        console.log('window.ethereum exists:', !!window.ethereum);
+        
+        if (window.ethereum?.providers && window.ethereum.providers.length > 0) {
+          console.log('📦 Multiple providers found:', window.ethereum.providers.length);
+          const metaMaskProvider = window.ethereum.providers.find((p: any) => p.isMetaMask);
+          return metaMaskProvider || window.ethereum.providers[0];
+        }
+
+        if (window.ethereum) {
+          console.log('✅ Single provider found');
+          return window.ethereum;
+        }
+
+        return null;
+      };
+
+      const wallet = detectWallet();
+      
+      if (wallet) {
+        console.log('📋 Checking for existing accounts...');
+        const accounts = await wallet.request({ method: 'eth_accounts' });
+        console.log('Found accounts:', accounts.length);
+        
         if (accounts.length > 0) {
+          console.log('✅ Wallet already connected:', `${accounts[0].substring(0, 8)}...`);
           setWalletAddress(accounts[0]);
           setIsConnected(true);
           await getChainId();
           await getBalance(accounts[0]);
           // Store in localStorage
           localStorage.setItem('walletAddress', accounts[0]);
+          localStorage.setItem('walletConnected', 'true');
+        } else {
+          console.log('📭 No accounts found, wallet not connected');
         }
+      } else {
+        console.log('❌ No wallet provider detected during initialization');
       }
     } catch (error) {
-      console.error('Error checking wallet connection:', error);
+      console.error('💥 Error checking wallet connection:', error);
     }
   };
 
   const setupEventListeners = () => {
-    if (window.ethereum) {
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', handleChainChanged);
+    console.log('🎧 Setting up wallet event listeners...');
+    
+    const detectWallet = () => {
+      if (window.ethereum?.providers && window.ethereum.providers.length > 0) {
+        const metaMaskProvider = window.ethereum.providers.find((p: any) => p.isMetaMask);
+        return metaMaskProvider || window.ethereum.providers[0];
+      }
+      return window.ethereum;
+    };
+
+    const wallet = detectWallet();
+    
+    if (wallet) {
+      console.log('✅ Event listeners attached to wallet provider');
+      wallet.on('accountsChanged', handleAccountsChanged);
+      wallet.on('chainChanged', handleChainChanged);
+    } else {
+      console.log('❌ No wallet provider found for event listeners');
     }
   };
 
@@ -159,9 +212,78 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
+  // Diagnostic function to help debug wallet issues
+  const diagnoseWallet = () => {
+    console.log('🔍 === WALLET DIAGNOSTIC REPORT ===');
+    console.log('Browser environment:', typeof window !== 'undefined');
+    console.log('window.ethereum exists:', !!window.ethereum);
+    
+    if (window.ethereum) {
+      console.log('window.ethereum.isMetaMask:', window.ethereum.isMetaMask);
+      console.log('window.ethereum.isTrustWallet:', window.ethereum.isTrustWallet);
+      console.log('window.ethereum.isConnected():', window.ethereum.isConnected?.());
+      console.log('window.ethereum.providers:', window.ethereum.providers?.length || 'none');
+      
+      if (window.ethereum.providers) {
+        window.ethereum.providers.forEach((provider: any, index: number) => {
+          console.log(`Provider ${index}:`, {
+            isMetaMask: provider.isMetaMask,
+            isTrustWallet: provider.isTrustWallet,
+            isConnected: provider.isConnected?.()
+          });
+        });
+      }
+    }
+    
+    console.log('localStorage walletConnected:', localStorage.getItem('walletConnected'));
+    console.log('localStorage walletAddress:', localStorage.getItem('walletAddress'));
+    console.log('Current state - isConnected:', isConnected);
+    console.log('Current state - walletAddress:', walletAddress ? `${walletAddress.substring(0, 8)}...` : 'none');
+    console.log('=== END DIAGNOSTIC REPORT ===');
+  };
+
   const connectWallet = async () => {
-    if (!window.ethereum) {
-      setError('MetaMask is not installed. Please install MetaMask to connect your wallet.');
+    console.log('🔍 Starting wallet connection process...');
+    
+    // Enhanced wallet detection
+    const detectWallet = () => {
+      if (typeof window === 'undefined') {
+        console.log('❌ Window is undefined (SSR)');
+        return null;
+      }
+
+      console.log('🔍 Checking for wallet providers...');
+      console.log('window.ethereum:', !!window.ethereum);
+      console.log('window.ethereum.isMetaMask:', window.ethereum?.isMetaMask);
+      console.log('window.ethereum.isTrustWallet:', window.ethereum?.isTrustWallet);
+      console.log('window.ethereum.providers:', window.ethereum?.providers?.length || 'none');
+
+      // Check for multiple wallet providers
+      if (window.ethereum?.providers && window.ethereum.providers.length > 0) {
+        console.log('📦 Multiple wallet providers detected:', window.ethereum.providers.length);
+        // Find MetaMask or first available provider
+        const metaMaskProvider = window.ethereum.providers.find((p: any) => p.isMetaMask);
+        const provider = metaMaskProvider || window.ethereum.providers[0];
+        console.log('✅ Selected provider:', provider.isMetaMask ? 'MetaMask' : 'Other wallet');
+        return provider;
+      }
+
+      // Single wallet provider
+      if (window.ethereum) {
+        console.log('✅ Single wallet provider detected');
+        return window.ethereum;
+      }
+
+      console.log('❌ No wallet provider found');
+      return null;
+    };
+
+    const wallet = detectWallet();
+    
+    if (!wallet) {
+      const errorMsg = 'No Web3 wallet detected. Please install MetaMask, Trust Wallet, or another Web3 wallet extension.';
+      console.error('❌', errorMsg);
+      setError(errorMsg);
       return;
     }
 
@@ -169,32 +291,72 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // Request account access
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      console.log('🔐 Requesting wallet accounts...');
       
-      if (accounts.length > 0) {
-        setWalletAddress(accounts[0]);
+      // Request account access with the detected wallet
+      const accounts = await wallet.request({ 
+        method: 'eth_requestAccounts' 
+      });
+      
+      console.log('📋 Received accounts:', accounts.length, accounts[0] ? `${accounts[0].substring(0, 8)}...` : 'none');
+      
+      if (accounts && accounts.length > 0) {
+        const address = accounts[0];
+        console.log('✅ Wallet connected successfully:', `${address.substring(0, 8)}...`);
+        
+        setWalletAddress(address);
         setIsConnected(true);
         
         // Get chain ID and switch to BSC if needed
+        console.log('🔗 Checking network...');
         const currentChainId = await getChainId();
+        console.log('🌐 Current chain ID:', currentChainId);
         
         // Switch to BSC Testnet by default for development
         if (currentChainId !== 97 && currentChainId !== 56) {
+          console.log('🔄 Switching to BSC network...');
           await switchToBSCNetwork(true); // true for testnet
         }
         
-        await getBalance(accounts[0]);
+        console.log('💰 Getting wallet balance...');
+        await getBalance(address);
         
         // Store in localStorage
-        localStorage.setItem('walletAddress', accounts[0]);
+        localStorage.setItem('walletAddress', address);
         localStorage.setItem('walletConnected', 'true');
+        
+        console.log('🎉 Wallet connection process completed successfully!');
+      } else {
+        console.log('❌ No accounts returned from wallet');
+        setError('No accounts found in wallet. Please make sure your wallet is unlocked.');
       }
     } catch (error: any) {
-      console.error('Error connecting wallet:', error);
-      setError(error.message || 'Failed to connect wallet');
+      console.error('💥 Error connecting wallet:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Full error object:', error);
+      
+      let errorMessage = 'Failed to connect wallet';
+      
+      // Enhanced error handling
+      if (error.code === 4001) {
+        errorMessage = 'Connection request was rejected. Please try again and approve the connection.';
+      } else if (error.code === -32603) {
+        errorMessage = 'Internal wallet error. Please try refreshing the page and ensure your wallet is unlocked.';
+      } else if (error.code === -32002) {
+        errorMessage = 'Connection request is pending. Please check your wallet for a pending connection request.';
+      } else if (error.message?.includes('User rejected')) {
+        errorMessage = 'Connection request was rejected. Please approve the connection request in your wallet.';
+      } else if (error.message?.includes('No active wallet')) {
+        errorMessage = 'Wallet is not active. Please unlock your wallet and try again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsConnecting(false);
+      console.log('🏁 Wallet connection attempt finished');
     }
   };
 
@@ -219,6 +381,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     disconnectWallet,
     isConnecting,
     error,
+    diagnoseWallet,
   };
 
   return (
