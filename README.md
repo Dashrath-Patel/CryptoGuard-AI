@@ -59,7 +59,12 @@ npm install
 # Create .env.local file with:
 BSCSCAN_API_KEY=your_bscscan_api_key
 NEXT_PUBLIC_BINANCE_API_URL=https://api.binance.com
+
+# For Smart Translator AI features (optional):
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
+
+> 💡 **Get Gemini API Key**: Visit [Google AI Studio](https://makersuite.google.com/app/apikey) for free access to the Gemini 1.5 Flash model.
 
 4. **Run the development server**
 ```bash
@@ -74,8 +79,8 @@ Navigate to [http://localhost:3000](http://localhost:3000)
 | Feature | Status | Description |
 |---------|--------|-------------|
 | ✅ AI Security Scanner | **Live** | Real-time BNB Chain analysis with BSCScan integration |
+| ✅ Smart Translator | **Live** | AI-powered DeFi terminology translation with Gemini AI |
 | 🔄 Contract Auditor | **In Progress** | Smart contract grading system |
-| 🔄 Smart Translator | **In Progress** | DeFi terminology simplification |
 | 🔄 Market Guardian | **In Progress** | Whale movement & manipulation detection |
 
 ## 📊 Market Opportunity
@@ -108,16 +113,27 @@ Navigate to [http://localhost:3000](http://localhost:3000)
 - Smart contract vulnerability assessment
 - Real-time scam database integration
 
+### 📖 Smart Translator  
+- **AI-Powered**: Uses Google Gemini API for intelligent translations
+- **Dual Modes**: Text analysis and single term lookup
+- **BSC-Focused**: Specialized examples from BNB Chain ecosystem
+- **Risk Assessment**: Categorizes terms by risk level and category
+- **Fallback System**: Works offline with comprehensive crypto dictionary
+- **Real-time**: Instant translations of complex DeFi terminology
+
+> **Test the Translator**: Visit `/test-translator` to try different scenarios
+
 ## 🛣️ Roadmap
 
 ### Phase 1: Core Security (Current)
 - [x] AI Security Scanner with real-time data
 - [x] BNB Chain integration
 - [x] Live network monitoring
+- [x] Smart Translator with Gemini AI integration
 - [ ] Complete contract auditor implementation
 
 ### Phase 2: User Experience
-- [ ] Smart Translator for DeFi terms
+- [x] Smart Translator for DeFi terms
 - [ ] Mobile-responsive optimization
 - [ ] User onboarding flow
 
@@ -142,8 +158,39 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🔗 Links
 
 - **Live Demo**: [Coming Soon]
-- **Documentation**: [Coming Soon]
+- **Documentation**: [Smart Translator Backend Guide](SMART_TRANSLATOR_BACKEND.md)
 - **API Reference**: [Coming Soon]
+
+## 📚 API Endpoints
+
+### Smart Translator API
+**Endpoint**: `POST /api/translator/analyze`
+
+**Request**:
+```json
+{
+  "text": "I want to provide liquidity but worried about impermanent loss",
+  "mode": "text" // or "term"
+}
+```
+
+**Response**:
+```json
+{
+  "translations": [
+    {
+      "term": "Impermanent Loss",
+      "simpleDef": "Easy explanation...",
+      "technicalDef": "Technical definition...",
+      "example": "Real BSC example...",
+      "category": "DeFi",
+      "riskLevel": "Medium",
+      "relatedTerms": ["yield farming", "liquidity provider"]
+    }
+  ],
+  "source": "AI-powered"
+}
+```
 
 ---
 

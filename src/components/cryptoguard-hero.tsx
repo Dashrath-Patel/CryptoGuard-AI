@@ -129,7 +129,7 @@ export function CryptoGuardHero() {
             onClick={() => {
               document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="px-8 py-3 text-lg border border-neutral-600 text-neutral-300 hover:text-white hover:border-neutral-400 transition-colors rounded-full"
+            className="px-8 py-3 text-lg border border-neutral-600 text-neutral-300 hover:text-white hover:border-neutral-400 transition-colors rounded-full cursor-pointer"
           >
             Learn More
           </button>
