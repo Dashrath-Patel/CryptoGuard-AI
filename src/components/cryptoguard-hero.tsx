@@ -5,7 +5,7 @@ import { TextGenerateEffect } from "./ui/text-generate-effect";
 import { HoverBorderGradient } from "./ui/hover-border-gradient";
 
 export function CryptoGuardHero() {
-  const words = "Transform crypto from 'scary and complex' to 'safe and simple'";
+  const words = "Transform BNB Chain from 'scary and complex' to 'safe and simple'";
   
   return (
     <div className="relative h-screen w-full bg-black/[0.96] antialiased bg-grid-white/[0.02] overflow-hidden">
@@ -16,11 +16,11 @@ export function CryptoGuardHero() {
       />
       <Spotlight
         className="top-10 left-full h-[80vh] w-[50vw]"
-        fill="purple"
+        fill="#F0B90B"
       />
       <Spotlight
         className="top-28 left-80 h-[80vh] w-[50vw]"
-        fill="blue"
+        fill="#F0B90B"
       />
       
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-4">
@@ -34,6 +34,9 @@ export function CryptoGuardHero() {
           <h1 className="text-4xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-400 bg-opacity-50">
             CryptoGuard AI
           </h1>
+          <p className="text-xl md:text-2xl text-yellow-400 font-semibold mt-4">
+            BNB Chain Security Platform
+          </p>
           <div className="mt-8 max-w-4xl">
             <TextGenerateEffect words={words} className="text-lg md:text-xl" />
           </div>
@@ -47,8 +50,8 @@ export function CryptoGuardHero() {
           className="mt-8 max-w-2xl text-center"
         >
           <p className="text-neutral-300 text-lg">
-            With <span className="text-red-400 font-semibold">$3.8B+ lost</span> to crypto scams and hacks, 
-            we&apos;re building the first AI-powered platform that makes Web3 security accessible to everyone.
+            With <span className="text-red-400 font-semibold">$3.8B+ lost</span> to crypto scams and hacks on BSC, 
+            we&apos;re building the first AI-powered platform specifically for <span className="text-yellow-400 font-semibold">BNB Chain security</span>.
           </p>
         </motion.div>
 
@@ -61,15 +64,19 @@ export function CryptoGuardHero() {
         >
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-green-500"></div>
-            <span>AI-Powered Security Scanning</span>
+            <span>BNB Chain AI Security Scanning</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-yellow-400"></div>
+            <span>BEP-20 Contract Auditing</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-            <span>Smart Contract Auditing</span>
+            <span>BSC Transaction Monitoring</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-purple-500"></div>
-            <span>Plain-English Translation</span>
+            <span>PancakeSwap Safety Analysis</span>
           </div>
         </motion.div>
 
