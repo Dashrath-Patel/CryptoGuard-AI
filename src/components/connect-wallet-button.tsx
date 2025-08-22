@@ -49,7 +49,7 @@ export function ConnectWalletButton() {
         <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-xl p-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <IconPlugConnected className="h-5 w-5 text-green-400" />
+              <IconPlugConnected className="h-5 w-5 text-white" />
               <div className="text-left">
                 <div className="text-sm font-medium text-white">
                   {formatAddress(walletAddress)}
@@ -70,37 +70,75 @@ export function ConnectWalletButton() {
           </div>
         </div>
       </motion.div>
-    );
+    );1
   }
 
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* Connect Button */}
-      <motion.button
+      {/* Connect Button - Simple and explicit */}
+      <button
         onClick={connectWallet}
         disabled={isConnecting}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-3 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
+        style={{
+          background: 'linear-gradient(90deg, #f97316, #eab308)',
+          color: '#ffffff',
+          fontWeight: 'bold',
+          fontSize: '16px',
+          padding: '12px 24px',
+          borderRadius: '12px',
+          border: 'none',
+          cursor: isConnecting ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.3s ease',
+          minWidth: '160px',
+          justifyContent: 'center'
+        }}
+        onMouseEnter={(e) => {
+          if (!isConnecting) {
+            e.currentTarget.style.background = 'linear-gradient(90deg, #ea580c, #d97706)';
+            e.currentTarget.style.transform = 'scale(1.02)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isConnecting) {
+            e.currentTarget.style.background = 'linear-gradient(90deg, #f97316, #eab308)';
+            e.currentTarget.style.transform = 'scale(1)';
+          }
+        }}
       >
         {isConnecting ? (
           <>
-            <IconLoader2 className="h-5 w-5 animate-spin" />
-            <span>Connecting...</span>
+            <IconLoader2 
+              className="h-5 w-5 animate-spin" 
+              style={{ 
+                color: '#ffffff',
+                minWidth: '20px',
+                minHeight: '20px'
+              }} 
+            />
+            <span style={{ color: '#ffffff', fontWeight: 'bold' }}>
+              Connecting...
+            </span>
           </>
         ) : (
           <>
-            <IconWallet className="h-5 w-5" />
-            <span>Connect Wallet</span>
+            <IconWallet 
+              className="h-5 w-5" 
+              style={{ 
+                color: '#ffffff',
+                minWidth: '20px',
+                minHeight: '20px'
+              }} 
+            />
+            <span style={{ color: '#ffffff', fontWeight: 'bold' }}>
+              Connect Wallet
+            </span>
           </>
         )}
-        
-        {/* Animated background */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-400 opacity-0 hover:opacity-20 transition-opacity"
-          layoutId="wallet-button-bg"
-        />
-      </motion.button>
+      </button>
 
       {/* Error Message */}
       {error && (

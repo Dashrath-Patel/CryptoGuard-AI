@@ -31,7 +31,7 @@ export function Header() {
   return (
     <div className="relative w-full">
       <FloatingNav navItems={navItems} />
-      <div className="fixed top-4 right-4 z-[5001]">
+      <div className="fixed top-4 right-4 z-[9999] pointer-events-auto">
         <ConnectWalletButton />
       </div>
     </div>
