@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { geminiModel, CRYPTO_TRANSLATOR_PROMPT } from '@/lib/gemini';
 
 interface Translation {
   term: string;
@@ -10,7 +11,7 @@ interface Translation {
   relatedTerms: string[];
 }
 
-// Crypto dictionary with simple explanations
+// Enhanced crypto dictionary with more terms (fallback for when Gemini is unavailable)
 const cryptoDictionary: { [key: string]: Translation } = {
   'impermanent loss': {
     term: 'Impermanent Loss',
@@ -101,6 +102,42 @@ const cryptoDictionary: { [key: string]: Translation } = {
     category: 'Technical',
     riskLevel: 'Medium',
     relatedTerms: ['supply cap', 'inflation', 'burning', 'vesting']
+  },
+  'pancakeswap': {
+    term: 'PancakeSwap',
+    simpleDef: 'The biggest decentralized exchange on BNB Chain where you can swap tokens, provide liquidity, and earn rewards.',
+    technicalDef: 'An automated market maker (AMM) and decentralized exchange (DEX) running on BNB Smart Chain.',
+    example: 'You can swap BNB for CAKE tokens on PancakeSwap, or provide BNB-USDT liquidity to earn trading fees.',
+    category: 'DeFi',
+    riskLevel: 'Medium',
+    relatedTerms: ['AMM', 'DEX', 'liquidity pool', 'CAKE token']
+  },
+  'bnb chain': {
+    term: 'BNB Chain',
+    simpleDef: 'A blockchain network created by Binance that\'s faster and cheaper than Ethereum, perfect for DeFi and gaming.',
+    technicalDef: 'A dual-chain architecture consisting of BNB Beacon Chain and BNB Smart Chain, optimized for high performance and low fees.',
+    example: 'Most BSC DeFi apps like PancakeSwap run on BNB Chain because transactions cost cents instead of dollars.',
+    category: 'Technical',
+    riskLevel: 'Low',
+    relatedTerms: ['BSC', 'Binance', 'EVM compatible', 'gas fees']
+  },
+  'metamask': {
+    term: 'MetaMask',
+    simpleDef: 'A digital wallet that lives in your browser, like a secure pocket for your crypto that connects to DeFi apps.',
+    technicalDef: 'A cryptocurrency wallet and gateway to blockchain applications, functioning as a browser extension or mobile app.',
+    example: 'You connect MetaMask to PancakeSwap to trade tokens, and it keeps your private keys safe on your device.',
+    category: 'Technical',
+    riskLevel: 'Medium',
+    relatedTerms: ['wallet', 'private key', 'seed phrase', 'DeFi']
+  },
+  'venus protocol': {
+    term: 'Venus Protocol',
+    simpleDef: 'A lending platform on BNB Chain where you can lend crypto to earn interest or borrow against your crypto collateral.',
+    technicalDef: 'A decentralized money market protocol that enables lending, borrowing, and minting of synthetic stablecoins on BNB Chain.',
+    example: 'You can deposit BNB as collateral and borrow USDT, or lend your USDT to earn 8% APY.',
+    category: 'DeFi',
+    riskLevel: 'High',
+    relatedTerms: ['lending', 'borrowing', 'collateral', 'liquidation']
   }
 };
 
@@ -117,30 +154,89 @@ export async function POST(request: NextRequest) {
 
     let translations: Translation[] = [];
 
-    if (mode === 'term') {
-      // Single term lookup
-      const term = text.toLowerCase().trim();
-      const translation = cryptoDictionary[term];
-      
-      if (translation) {
-        translations = [translation];
+    // Try Gemini AI first for better, dynamic responses
+    try {
+      if (process.env.GEMINI_API_KEY) {
+        translations = await getGeminiTranslation(text, mode);
       } else {
-        // Fuzzy search for similar terms
-        const similarTerms = findSimilarTerms(term);
-        translations = similarTerms.map(t => cryptoDictionary[t]);
+        console.warn('GEMINI_API_KEY not found, using fallback dictionary');
+        translations = getFallbackTranslation(text, mode);
       }
-    } else {
-      // Text analysis mode
-      translations = analyzeText(text);
+    } catch (geminiError) {
+      console.error('Gemini API error, falling back to dictionary:', geminiError);
+      translations = getFallbackTranslation(text, mode);
     }
 
-    return NextResponse.json({ translations });
+    return NextResponse.json({ 
+      translations,
+      source: process.env.GEMINI_API_KEY ? 'AI-powered' : 'dictionary-based'
+    });
   } catch (error) {
     console.error('Translation error:', error);
     return NextResponse.json(
       { error: 'Failed to translate' },
       { status: 500 }
     );
+  }
+}
+
+async function getGeminiTranslation(text: string, mode: string): Promise<Translation[]> {
+  const prompt = `${CRYPTO_TRANSLATOR_PROMPT}
+
+Mode: ${mode === 'term' ? 'Single term lookup' : 'Text analysis'}
+User Input: "${text}"
+
+Please analyze and provide translations in the specified JSON format.`;
+
+  const result = await geminiModel.generateContent(prompt);
+  const response = await result.response;
+  const responseText = response.text();
+
+  try {
+    // Extract JSON from response (handle potential markdown formatting)
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in response');
+    }
+
+    const parsedResponse = JSON.parse(jsonMatch[0]);
+    
+    // Validate and clean the response
+    if (parsedResponse.translations && Array.isArray(parsedResponse.translations)) {
+      return parsedResponse.translations.map((t: any) => ({
+        term: t.term || 'Unknown Term',
+        simpleDef: t.simpleDef || 'No simple definition available.',
+        technicalDef: t.technicalDef || 'No technical definition available.',
+        example: t.example || 'No example available.',
+        category: t.category || 'Technical',
+        riskLevel: ['Low', 'Medium', 'High'].includes(t.riskLevel) ? t.riskLevel : 'Medium',
+        relatedTerms: Array.isArray(t.relatedTerms) ? t.relatedTerms.slice(0, 5) : []
+      }));
+    }
+    
+    return [];
+  } catch (parseError) {
+    console.error('Failed to parse Gemini response:', parseError);
+    throw new Error('Invalid response format from AI');
+  }
+}
+
+function getFallbackTranslation(text: string, mode: string): Translation[] {
+  if (mode === 'term') {
+    // Single term lookup
+    const term = text.toLowerCase().trim();
+    const translation = cryptoDictionary[term];
+    
+    if (translation) {
+      return [translation];
+    } else {
+      // Fuzzy search for similar terms
+      const similarTerms = findSimilarTerms(term);
+      return similarTerms.map(t => cryptoDictionary[t]);
+    }
+  } else {
+    // Text analysis mode
+    return analyzeText(text);
   }
 }
 
