@@ -101,7 +101,7 @@ export function HoverBorderGradient({
       
       <div
         className={cn(
-          "w-auto text-white z-10 bg-black px-4 py-2 rounded-[inherit] relative overflow-hidden",
+          "w-auto text-white z-20 bg-black px-4 py-2 rounded-[inherit] relative overflow-hidden",
           className
         )}
       >
@@ -141,7 +141,7 @@ export function HoverBorderGradient({
           repeat: hovered ? Infinity : 0 
         }}
       />
-      {/* Changed z-1 to z-10 (valid Tailwind class) */}
+      {/* Background layer - lower z-index than text */}
       <div className="bg-black absolute z-10 flex-none inset-[2px] rounded-[100px]" />
     </Component>
   );
