@@ -24,8 +24,8 @@ export default function DashboardPage() {
 
   const tools = [
     {
-      title: "AI Security Scanner",
-      description: "Analyze wallets, transactions, and smart contracts for potential threats",
+      title: "BNB Chain AI Security Scanner",
+      description: "Analyze BNB wallets, BSC transactions, and BEP-20 smart contracts for threats",
       icon: IconShieldCheck,
       href: "/dashboard/scanner",
       color: "text-green-400",
@@ -33,8 +33,8 @@ export default function DashboardPage() {
       borderColor: "border-green-500/20"
     },
     {
-      title: "Smart Contract Auditor", 
-      description: "Get comprehensive security grades for any BNB Chain contract",
+      title: "BEP-20 Contract Auditor", 
+      description: "Get comprehensive security grades for any BNB Chain BEP-20 contract",
       icon: IconFileSearch,
       href: "/dashboard/auditor",
       color: "text-blue-400",
@@ -42,8 +42,8 @@ export default function DashboardPage() {
       borderColor: "border-blue-500/20"
     },
     {
-      title: "Smart Translator",
-      description: "Convert complex crypto terminology into plain English",
+      title: "BSC Transaction Translator",
+      description: "Convert complex BNB Chain transaction data into plain English",
       icon: IconLanguage,
       href: "/dashboard/translator", 
       color: "text-purple-400",
@@ -51,8 +51,8 @@ export default function DashboardPage() {
       borderColor: "border-purple-500/20"
     },
     {
-      title: "Portfolio Insights",
-      description: "Get AI-powered recommendations for your crypto investments",
+      title: "BNB Portfolio Insights",
+      description: "Get AI-powered recommendations for your BNB Chain DeFi investments",
       icon: IconChartBar,
       href: "/dashboard/insights",
       color: "text-yellow-400", 
