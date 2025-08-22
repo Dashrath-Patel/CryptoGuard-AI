@@ -6,22 +6,34 @@ import { useEffect, useState } from "react";
 export function DashboardWelcome() {
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [currentTime, setCurrentTime] = useState<string>("");
+  const [currentDate, setCurrentDate] = useState<string>("");
+  const [greeting, setGreeting] = useState<string>("Hello");
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    // Set client flag to true after component mounts
+    setIsClient(true);
+
     // Get wallet address from localStorage
     const address = localStorage.getItem("walletAddress");
     if (address) {
       setWalletAddress(address);
     }
 
-    // Update time
-    const updateTime = () => {
+    // Update time and greeting
+    const updateTimeAndGreeting = () => {
       const now = new Date();
       setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setCurrentDate(now.toLocaleDateString());
+      
+      const hour = now.getHours();
+      if (hour < 12) setGreeting("Good morning");
+      else if (hour < 17) setGreeting("Good afternoon");
+      else setGreeting("Good evening");
     };
 
-    updateTime();
-    const interval = setInterval(updateTime, 60000); // Update every minute
+    updateTimeAndGreeting();
+    const interval = setInterval(updateTimeAndGreeting, 60000); // Update every minute
 
     return () => clearInterval(interval);
   }, []);
@@ -29,13 +41,6 @@ export function DashboardWelcome() {
   const truncateAddress = (address: string) => {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
   };
 
   const teamMembers = [
@@ -77,8 +82,8 @@ export function DashboardWelcome() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             {/* Welcome Message */}
             <div className="mb-4 md:mb-0">
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                {getGreeting()}! 👋
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2" suppressHydrationWarning>
+                {isClient ? `${greeting}! 👋` : "Welcome! 👋"}
               </h1>
               
               {walletAddress ? (
@@ -102,8 +107,8 @@ export function DashboardWelcome() {
 
             {/* Time and Status */}
             <div className="flex flex-col items-end">
-              <div className="text-neutral-400 text-sm mb-1">
-                {new Date().toLocaleDateString()} • {currentTime}
+              <div className="text-neutral-400 text-sm mb-1" suppressHydrationWarning>
+                {isClient ? `${currentDate} • ${currentTime}` : ""}
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
