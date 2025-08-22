@@ -6,6 +6,7 @@ export function ConnectWalletButton() {
   const [isConnected, setIsConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   // Simulate wallet connection (replace with actual Web3 integration)
   const connectWallet = async () => {
@@ -39,6 +40,8 @@ export function ConnectWalletButton() {
 
   // Check for existing connection on component mount
   useEffect(() => {
+    setIsClient(true);
+    
     const connected = localStorage.getItem("walletConnected");
     const address = localStorage.getItem("walletAddress");
     
@@ -52,6 +55,19 @@ export function ConnectWalletButton() {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
+
+  // Prevent hydration mismatch by not rendering connected state until client-side
+  if (!isClient) {
+    return (
+      <HoverBorderGradient
+        containerClassName="rounded-full"
+        as="button"
+        className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2 opacity-50"
+      >
+        <span>Loading...</span>
+      </HoverBorderGradient>
+    );
+  }
 
   if (isConnected) {
     return (
