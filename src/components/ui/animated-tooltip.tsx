@@ -17,6 +17,8 @@ export const AnimatedTooltip = ({
     name: string;
     designation: string;
     image: string;
+    color?: string;
+    icon?: string;
   }[];
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -45,10 +47,10 @@ export const AnimatedTooltip = ({
   };
 
   return (
-    <>
+    <div className="flex items-center">
       {items.map((item, idx) => (
         <div
-          className="group relative -mr-4"
+          className="group relative -mr-4 z-10"
           key={item.name}
           onMouseEnter={() => setHoveredIndex(item.id)}
           onMouseLeave={() => setHoveredIndex(null)}
@@ -73,27 +75,32 @@ export const AnimatedTooltip = ({
                   rotate: rotate,
                   whiteSpace: "nowrap",
                 }}
-                className="absolute -top-16 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center justify-center rounded-md bg-black px-4 py-2 text-xs shadow-xl"
+                className="absolute -top-20 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center justify-center rounded-xl bg-black/90 backdrop-blur-sm px-4 py-3 text-xs shadow-xl border border-neutral-700"
               >
                 <div className="absolute inset-x-10 -bottom-px z-30 h-px w-[20%] bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
                 <div className="absolute -bottom-px left-10 z-30 h-px w-[40%] bg-gradient-to-r from-transparent via-sky-500 to-transparent" />
-                <div className="relative z-30 text-base font-bold text-white">
+                <div className="relative z-30 text-base font-bold text-white mb-1">
                   {item.name}
                 </div>
-                <div className="text-xs text-white">{item.designation}</div>
+                <div className="text-xs text-neutral-300">{item.designation}</div>
+                {item.icon && (
+                  <div className="text-lg mt-1">{item.icon}</div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
-          <img
+          
+          {/* Enhanced Avatar */}
+          <div
             onMouseMove={handleMouseMove}
-            height={100}
-            width={100}
-            src={item.image}
-            alt={item.name}
-            className="relative !m-0 h-14 w-14 rounded-full border-2 border-white object-cover object-top !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105"
-          />
+            className={`relative h-14 w-14 rounded-full border-2 border-white transition-all duration-300 group-hover:z-30 group-hover:scale-110 group-hover:border-4 cursor-pointer flex items-center justify-center text-2xl ${
+              item.color || 'bg-gradient-to-br from-neutral-700 to-neutral-800'
+            } group-hover:shadow-lg group-hover:shadow-white/20`}
+          >
+            {item.image}
+          </div>
         </div>
       ))}
-    </>
+    </div>
   );
 };
