@@ -144,34 +144,34 @@ function DashboardContent() {
                   </motion.div>
                 ))}
               </div>
-            </CardSpotlight>
 
-            {/* Exploit Translator */}
-            <CardSpotlight className="h-80 w-full">
-              <div className="text-white relative z-20 p-6 h-full flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center mb-4">
-                    <IconLanguage className="h-8 w-8 text-green-400 mr-3" />
-                    <h3 className="text-xl font-bold">Exploit Translator</h3>
+              {/* Exploit Translator */}
+              <CardSpotlight className="h-80 w-full">
+                <div className="text-white relative z-20 p-6 h-full flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center mb-4">
+                      <IconLanguage className="h-8 w-8 text-green-400 mr-3" />
+                      <h3 className="text-xl font-bold">Exploit Translator</h3>
+                    </div>
+                    <p className="text-neutral-300">
+                      Translate complex security exploits into human-readable explanations.
+                    </p>
                   </div>
-                  <p className="text-neutral-300">
-                    Translate complex security exploits into human-readable explanations.
-                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold flex items-center"
+                    onClick={() => {
+                      // Navigate to translator tool
+                      console.log("Navigate to Exploit Translator");
+                    }}
+                  >
+                    Translate
+                    <IconArrowRight className="ml-2 h-4 w-4" />
+                  </motion.button>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold flex items-center"
-                  onClick={() => {
-                    // Navigate to translator tool
-                    console.log("Navigate to Exploit Translator");
-                  }}
-                >
-                  Translate
-                  <IconArrowRight className="ml-2 h-4 w-4" />
-                </motion.button>
-              </div>
-            </CardSpotlight>
+              </CardSpotlight>
+            </motion.div>
           </div>
 
           {/* Right Column - Wallet Health */}
