@@ -1,7 +1,6 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-
-import { motion } from "motion/react";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 type Direction = "TOP" | "LEFT" | "BOTTOM" | "RIGHT";
@@ -13,6 +12,8 @@ export function HoverBorderGradient({
   as: Tag = "button",
   duration = 1,
   clockwise = true,
+  onMouseEnter: propOnMouseEnter,
+  onMouseLeave: propOnMouseLeave,
   ...props
 }: React.PropsWithChildren<
   {
@@ -21,10 +22,22 @@ export function HoverBorderGradient({
     className?: string;
     duration?: number;
     clockwise?: boolean;
-  } & React.HTMLAttributes<HTMLElement>
+    onMouseEnter?: React.MouseEventHandler<HTMLElement>;
+    onMouseLeave?: React.MouseEventHandler<HTMLElement>;
+  } & Omit<React.HTMLAttributes<HTMLElement>, 'onMouseEnter' | 'onMouseLeave'>
 >) {
   const [hovered, setHovered] = useState<boolean>(false);
   const [direction, setDirection] = useState<Direction>("TOP");
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {
+    setHovered(true);
+    propOnMouseEnter?.(e);
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
+    setHovered(false);
+    propOnMouseLeave?.(e);
+  };
 
   const rotateDirection = (currentDirection: Direction): Direction => {
     const directions: Direction[] = ["TOP", "LEFT", "BOTTOM", "RIGHT"];
@@ -57,15 +70,17 @@ export function HoverBorderGradient({
       }, duration * 1000);
       return () => clearInterval(interval);
     }
-  }, [hovered]);
+  }, [hovered, duration, clockwise]);
+
+  // Cast Tag to any to avoid TypeScript errors with dynamic components
+  const Component = Tag as any;
+
   return (
-    <Tag
-      onMouseEnter={(event: React.MouseEvent<HTMLDivElement>) => {
-        setHovered(true);
-      }}
-      onMouseLeave={() => setHovered(false)}
+    <Component 
+      onMouseEnter={handleMouseEnter} 
+      onMouseLeave={handleMouseLeave}
       className={cn(
-        "relative flex rounded-full border content-center bg-black/20 hover:bg-black/10 transition-all duration-500 dark:bg-white/20 items-center flex-col flex-nowrap gap-10 h-min justify-center overflow-visible p-px decoration-clone w-fit hover:shadow-2xl hover:shadow-blue-500/30",
+        "relative flex rounded-full border content-center bg-black/20 hover:bg-black/10 transition-all duration-500 dark:bg-white/20 items-center flex-col flex-nowrap gap-10 h-min justify-center overflow-visible p-px decoration-clone w-fit hover:shadow-2xl hover:shadow-blue-500/30 cursor-pointer",
         containerClassName
       )}
       {...props}
@@ -120,9 +135,14 @@ export function HoverBorderGradient({
             ? [movingMap[direction], highlight, glowHighlight]
             : movingMap[direction],
         }}
-        transition={{ ease: "linear", duration: duration ?? 1, repeat: hovered ? Infinity : 0 }}
+        transition={{ 
+          ease: "linear", 
+          duration: duration, 
+          repeat: hovered ? Infinity : 0 
+        }}
       />
-      <div className="bg-black absolute z-1 flex-none inset-[2px] rounded-[100px]" />
-    </Tag>
+      {/* Changed z-1 to z-10 (valid Tailwind class) */}
+      <div className="bg-black absolute z-10 flex-none inset-[2px] rounded-[100px]" />
+    </Component>
   );
 }
