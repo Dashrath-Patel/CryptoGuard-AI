@@ -10,6 +10,8 @@ export function ClientWrapper({ children }: ClientWrapperProps) {
 
   useEffect(() => {
     setMounted(true);
+    // Add hydrated class after mounting to avoid hydration mismatch
+    document.documentElement.classList.add('hydrated');
   }, []);
 
   // Prevent hydration mismatch by not rendering until client-side
