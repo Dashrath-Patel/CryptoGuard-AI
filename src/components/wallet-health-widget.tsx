@@ -1,13 +1,18 @@
 "use client";
 import { CardSpotlight } from "./ui/card-spotlight";
-import { Meteors } from "./ui/meteors";
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 
 interface WalletHealthProps {
   walletAddress?: string;
 }
 
 export function WalletHealthWidget({ walletAddress }: WalletHealthProps) {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   // Mock data - replace with real data from your API
   const healthData = {
     overallScore: 85,
@@ -49,7 +54,6 @@ export function WalletHealthWidget({ walletAddress }: WalletHealthProps) {
   return (
     <CardSpotlight className="h-96 w-full">
       <div className="relative z-20 h-full p-6">
-        <Meteors number={20} />
         
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -130,7 +134,9 @@ export function WalletHealthWidget({ walletAddress }: WalletHealthProps) {
             transition={{ duration: 0.2 }}
           >
             <div className="text-sm font-bold text-green-400">✓ Secure</div>
-            <div className="text-xs text-neutral-400">Last Scan: {healthData.lastScan}</div>
+            <div className="text-xs text-neutral-400" suppressHydrationWarning>
+              Last Scan: {isClient ? healthData.lastScan : "Loading..."}
+            </div>
           </motion.div>
         </div>
       </div>
