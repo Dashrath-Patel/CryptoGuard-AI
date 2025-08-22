@@ -113,17 +113,22 @@ export function CryptoGuardHero() {
           transition={{ duration: 0.6, delay: 0.9 }}
           className="mt-12 flex flex-col sm:flex-row gap-4"
         >
-          <HoverBorderGradient
-            containerClassName="rounded-full"
-            as="button"
-            onClick={() => window.location.href = '/dashboard'}
-            className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2 text-lg px-8 py-3"
-          >
-            <span>Launch App</span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </HoverBorderGradient>
+          <div className="relative group launch-app-button glow-on-hover">
+            {/* Glow effect background */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:animate-pulse"></div>
+            
+            <HoverBorderGradient
+              containerClassName="rounded-full relative z-10"
+              as="button"
+              onClick={() => window.location.href = '/dashboard'}
+              className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2 text-lg px-8 py-3 group-hover:scale-105 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-blue-500/25"
+            >
+              <span className="group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text transition-all duration-300">Launch App</span>
+              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </HoverBorderGradient>
+          </div>
           
           <button 
             onClick={() => {
