@@ -8,7 +8,7 @@ export function CryptoGuardHero() {
   const words = "Making cryptocurrency as safe and easy as online banking through intelligent automation";
   
   return (
-    <div className="relative h-screen w-full bg-black/[0.96] antialiased bg-grid-white/[0.02] overflow-hidden">
+    <div className="relative h-screen w-full  bg-black/[0.96] antialiased bg-grid-white/[0.02] overflow-hidden">
       {/* Spotlight effects */}
       <Spotlight
         className="-top-40 left-0 md:left-60 md:-top-20"
@@ -17,7 +17,7 @@ export function CryptoGuardHero() {
       <Spotlight
         className="top-10 left-full h-[80vh] w-[50vw]"
         fill="#10B981"
-      />
+      />  
       <Spotlight
         className="top-28 left-80 h-[80vh] w-[50vw]"
         fill="#3B82F6"
@@ -38,7 +38,7 @@ export function CryptoGuardHero() {
             AI-Powered Crypto Protection Platform
           </p>
           <div className="mt-8 max-w-4xl">
-            <TextGenerateEffect words={words} className="text-lg md:text-xl" />
+            <TextGenerateEffect words={words} className="text-lg md:text-xl [&_span]:!text-neutral-200 [&>div>div]:!text-neutral-200" />
           </div>
         </motion.div>
 
