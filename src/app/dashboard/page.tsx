@@ -2,8 +2,9 @@
 import { DashboardWelcome } from "@/components/dashboard-welcome";
 import { WalletHealthWidget } from "@/components/wallet-health-widget";
 import { LiveNetworkStatus } from "@/components/live-network-status";
+import AISecurityRecommendations from "@/components/ai-security-recommendations";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useWallet } from "@/contexts/WalletContext";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 import { NoSSR } from "@/components/no-ssr";
 import { 
@@ -11,7 +12,9 @@ import {
   IconFileSearch, 
   IconLanguage, 
   IconChartBar,
-  IconArrowRight
+  IconArrowRight,
+  IconWallet,
+  IconLock
 } from "@tabler/icons-react";
 
 export default function DashboardPage() {
@@ -23,14 +26,18 @@ export default function DashboardPage() {
 }
 
 function DashboardContent() {
-  const [walletAddress, setWalletAddress] = useState<string>("");
+  const { isConnected, walletAddress } = useWallet();
 
-  useEffect(() => {
-    const address = localStorage.getItem("walletAddress");
-    if (address) {
-      setWalletAddress(address);
+  // Tools that require wallet connection
+  const walletRequiredTools = ["/dashboard/scanner", "/dashboard/guardian"];
+
+  const handleToolClick = (href: string) => {
+    if (walletRequiredTools.includes(href) && !isConnected) {
+      alert('Please connect your wallet to access this security feature');
+      return;
     }
-  }, []);
+    window.location.href = href;
+  };
 
 
   const tools = [
@@ -106,19 +113,29 @@ function DashboardContent() {
                     transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
                     whileHover={{ scale: 1.02 }}
                     className="cursor-pointer"
-                    onClick={() => window.location.href = tool.href}
+                    onClick={() => handleToolClick(tool.href)}
                   >
                     <CardSpotlight className="h-full">
                       <div className="relative z-20 h-full p-6">
                         <div className={`inline-flex items-center justify-between w-full mb-4`}>
-                          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg ${tool.bgColor} ${tool.borderColor} border`}>
+                          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg ${tool.bgColor} ${tool.borderColor} border relative`}>
                             <tool.icon className={`h-6 w-6 ${tool.color}`} />
+                            {walletRequiredTools.includes(tool.href) && !isConnected && (
+                              <IconLock className="absolute -top-1 -right-1 h-4 w-4 text-red-400 bg-black rounded-full p-0.5" />
+                            )}
                           </div>
-                          {tool.status && (
-                            <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">
-                              {tool.status}
-                            </span>
-                          )}
+                          <div className="flex flex-col items-end gap-1">
+                            {tool.status && (
+                              <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">
+                                {tool.status}
+                              </span>
+                            )}
+                            {walletRequiredTools.includes(tool.href) && !isConnected && (
+                              <span className="text-xs px-2 py-1 bg-red-500/20 text-red-400 rounded-full border border-red-500/30">
+                                Wallet Required
+                              </span>
+                            )}
+                          </div>
                         </div>
                         
                         <h3 className="text-xl font-semibold text-white mb-2">
@@ -182,7 +199,18 @@ function DashboardContent() {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               <h2 className="text-2xl font-bold text-white mb-6">Wallet Health</h2>
-              <WalletHealthWidget walletAddress={walletAddress} />
+              <WalletHealthWidget walletAddress={walletAddress || undefined} />
+            </motion.div>
+
+            {/* AI Security Recommendations */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
+              className="mt-8"
+            >
+              <h2 className="text-2xl font-bold text-white mb-6">AI Security Recommendations</h2>
+              <AISecurityRecommendations />
             </motion.div>
 
             {/* Live Network Status */}
