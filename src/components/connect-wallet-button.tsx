@@ -17,7 +17,7 @@ export function ConnectWalletButton() {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Mock wallet address (replace with actual wallet connection)
-      const mockAddress = "0x742d35Cc6634C0532925a3b8D55d8dd6D8cE1a23";
+      const mockAddress = "0x2907B83aA538cb6dC8Fe08cb6286b0B8e259d25e";
       setWalletAddress(mockAddress);
       setIsConnected(true);
       

@@ -31,6 +31,46 @@ function DashboardContent() {
     }
   }, []);
 
+
+  const tools = [
+    {
+      title: "BNB Chain AI Security Scanner",
+      description: "Analyze BNB wallets, BSC transactions, and BEP-20 smart contracts for threats",
+      icon: IconShieldCheck,
+      href: "/dashboard/scanner",
+      color: "text-green-400",
+      bgColor: "bg-green-500/10",
+      borderColor: "border-green-500/20"
+    },
+    {
+      title: "BEP-20 Contract Auditor", 
+      description: "Get comprehensive security grades for any BNB Chain BEP-20 contract",
+      icon: IconFileSearch,
+      href: "/dashboard/auditor",
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-500/20"
+    },
+    {
+      title: "BSC Transaction Translator",
+      description: "Convert complex BNB Chain transaction data into plain English",
+      icon: IconLanguage,
+      href: "/dashboard/translator", 
+      color: "text-purple-400",
+      bgColor: "bg-purple-500/10",
+      borderColor: "border-purple-500/20"
+    },
+    {
+      title: "BNB Portfolio Insights",
+      description: "Get AI-powered recommendations for your BNB Chain DeFi investments",
+      icon: IconChartBar,
+      href: "/dashboard/insights",
+      color: "text-yellow-400", 
+      bgColor: "bg-yellow-500/10",
+      borderColor: "border-yellow-500/20"
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header Section */}
