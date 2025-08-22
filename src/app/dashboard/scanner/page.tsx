@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 import { TransactionMonitor } from "@/components/transaction-monitor";
-import { SecurityRecommendations } from "@/components/security-recommendations";
+import AISecurityRecommendations from "@/components/ai-security-recommendations";
+import { useWallet } from "@/contexts/WalletContext";
 import { 
   IconShieldCheck, 
   IconScan, 
@@ -35,7 +36,7 @@ interface Transaction {
 }
 
 export default function SecurityScannerPage() {
-  const [walletAddress, setWalletAddress] = useState("");
+  const { isConnected, walletAddress } = useWallet();
   const [contractAddress, setContractAddress] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -44,16 +45,18 @@ export default function SecurityScannerPage() {
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [activeTab, setActiveTab] = useState<'wallet' | 'contract' | 'transaction'>('wallet');
 
+  // Auto-trigger wallet scan when wallet is connected
   useEffect(() => {
-    // Load connected wallet address
-    const address = localStorage.getItem("walletAddress");
-    if (address) {
-      setWalletAddress(address);
+    if (isConnected && walletAddress) {
+      performWalletScan();
     }
-  }, []);
+  }, [isConnected, walletAddress]);
 
   const performWalletScan = async () => {
-    if (!walletAddress) return;
+    if (!isConnected || !walletAddress) {
+      alert('Please connect your wallet first');
+      return;
+    }
 
     setIsScanning(true);
     try {
@@ -245,22 +248,22 @@ export default function SecurityScannerPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-neutral-300 mb-2">
-                        BNB Chain Wallet Address
+                        Connected Wallet Address
                       </label>
                       <input
                         type="text"
-                        value={walletAddress}
-                        onChange={(e) => setWalletAddress(e.target.value)}
-                        placeholder="0x... (BSC Address)"
+                        value={walletAddress || 'No wallet connected'}
+                        readOnly
+                        placeholder="Connect wallet to scan"
                         className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-green-400"
                       />
                       <p className="text-xs text-neutral-500 mt-1">
-                        Enter a Binance Smart Chain (BEP-20) wallet address
+                        {isConnected ? 'This is your connected wallet address' : 'Please connect your wallet to scan'}
                       </p>
                     </div>
                     <button
                       onClick={performWalletScan}
-                      disabled={!walletAddress || isScanning}
+                      disabled={!isConnected || !walletAddress || isScanning}
                       className="w-full bg-green-600 hover:bg-green-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       {isScanning ? (
@@ -510,7 +513,7 @@ export default function SecurityScannerPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <SecurityRecommendations />
+            <AISecurityRecommendations />
           </motion.div>
           
           <motion.div
@@ -518,7 +521,7 @@ export default function SecurityScannerPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
           >
-            <TransactionMonitor walletAddress={walletAddress} />
+            <TransactionMonitor />
           </motion.div>
         </div>
       </div>

@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
+import { useWallet } from "@/contexts/WalletContext";
 import { 
   IconAlertTriangle, 
   IconCircleCheck, 
   IconClock,
-  IconActivity
+  IconActivity,
+  IconWallet
 } from "@tabler/icons-react";
 
 interface MonitoredTransaction {
@@ -19,37 +21,76 @@ interface MonitoredTransaction {
   status: 'pending' | 'confirmed' | 'failed';
 }
 
-interface TransactionMonitorProps {
-  walletAddress: string;
-}
-
-export function TransactionMonitor({ walletAddress }: TransactionMonitorProps) {
+export function TransactionMonitor() {
+  const { isConnected, walletAddress } = useWallet();
   const [transactions, setTransactions] = useState<MonitoredTransaction[]>([]);
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  // Auto-start monitoring when wallet is connected
+  useEffect(() => {
+    if (isConnected && walletAddress) {
+      setIsMonitoring(true);
+    } else {
+      setIsMonitoring(false);
+      setTransactions([]);
+      setAlertCount(0);
+    }
+  }, [isConnected, walletAddress]);
 
   useEffect(() => {
     if (walletAddress && isMonitoring) {
-      const interval = setInterval(() => {
-        // Simulate new transaction detection
-        if (Math.random() > 0.8) {
-          const newTx: MonitoredTransaction = {
-            hash: `0x${Math.random().toString(16).substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`,
-            from: Math.random() > 0.5 ? walletAddress : `0x${Math.random().toString(16).substr(2, 8)}...`,
-            to: Math.random() > 0.5 ? walletAddress : `0x${Math.random().toString(16).substr(2, 8)}...`,
-            value: `${(Math.random() * 10).toFixed(3)} BNB`,
-            timestamp: new Date(),
-            riskLevel: Math.random() > 0.8 ? 'high' : Math.random() > 0.6 ? 'medium' : 'low',
-            status: 'pending'
-          };
-
-          setTransactions(prev => [newTx, ...prev.slice(0, 9)]);
+      const fetchRealTransactions = async () => {
+        try {
+          const response = await fetch(`/api/market-guardian/data?wallet=${walletAddress}`);
+          const data = await response.json();
           
-          if (newTx.riskLevel === 'high') {
-            setAlertCount(prev => prev + 1);
+          // Check for API errors
+          if (data.userWallet && data.userWallet.error) {
+            setApiError(data.userWallet.error);
+            setTransactions([]);
+            setAlertCount(0);
+            return;
+          } else {
+            setApiError(null);
           }
+          
+          // Get user transactions from the correct data structure
+          if (data.userWallet && data.userWallet.recentTransactions && data.userWallet.recentTransactions.length > 0) {
+            const userTransactions = data.userWallet.recentTransactions
+              .map((tx: any) => ({
+                hash: tx.hash,
+                from: tx.from.toLowerCase() === walletAddress.toLowerCase() ? 'Your Wallet' : tx.from,
+                to: tx.to.toLowerCase() === walletAddress.toLowerCase() ? 'Your Wallet' : tx.to,
+                value: `${tx.value.toFixed(6)} BNB`,
+                timestamp: new Date(tx.timestamp),
+                riskLevel: tx.valueUSD > 50000 ? 'high' : tx.valueUSD > 10000 ? 'medium' : 'low',
+                status: tx.status === 'success' ? 'confirmed' as const : 'failed' as const
+              }));
+
+            if (userTransactions.length > 0) {
+              setTransactions(userTransactions);
+              const highRiskCount = userTransactions.filter((tx: any) => tx.riskLevel === 'high').length;
+              setAlertCount(highRiskCount);
+            }
+          } else {
+            // No transactions found - clear the list
+            setTransactions([]);
+            setAlertCount(0);
+          }
+        } catch (error) {
+          console.error('Error fetching real transactions:', error);
+          setTransactions([]);
+          setAlertCount(0);
         }
-      }, 5000);
+      };
+
+      // Fetch immediately
+      fetchRealTransactions();
+      
+      // Then fetch every 15 seconds for real-time updates
+      const interval = setInterval(fetchRealTransactions, 15000);
 
       return () => clearInterval(interval);
     }
@@ -58,6 +99,11 @@ export function TransactionMonitor({ walletAddress }: TransactionMonitorProps) {
   const toggleMonitoring = () => {
     setIsMonitoring(!isMonitoring);
     if (!isMonitoring) {
+      setAlertCount(0);
+      setTransactions([]); // Clear any existing transactions when starting
+    } else {
+      // Clear transactions when stopping monitoring
+      setTransactions([]);
       setAlertCount(0);
     }
   };
@@ -108,7 +154,13 @@ export function TransactionMonitor({ walletAddress }: TransactionMonitorProps) {
           </div>
         </div>
 
-        {!walletAddress ? (
+        {!isConnected ? (
+          <div className="text-center text-neutral-400 py-8">
+            <IconWallet className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>Connect your wallet to start transaction monitoring</p>
+            <p className="text-xs text-neutral-500 mt-2">Real-time analysis of your wallet transactions</p>
+          </div>
+        ) : !isMonitoring ? (
           <div className="text-center text-neutral-400 py-8">
             <IconClock className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Connect a wallet to start transaction monitoring</p>
@@ -118,11 +170,23 @@ export function TransactionMonitor({ walletAddress }: TransactionMonitorProps) {
             <IconActivity className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Click "Start Monitor" to begin real-time transaction analysis</p>
           </div>
+        ) : apiError ? (
+          <div className="text-center text-orange-400 py-8">
+            <IconAlertTriangle className="h-12 w-12 mx-auto mb-4" />
+            <p className="text-sm mb-2">Demo Mode Active</p>
+            <p className="text-xs text-neutral-400 max-w-md mx-auto">{apiError}</p>
+            <div className="mt-4 text-xs text-neutral-500">
+              <p>🔗 Get your free BSC API key:</p>
+              <p>1. Visit https://bscscan.com/apis</p>
+              <p>2. Create account & get API key</p>
+              <p>3. Add BSCSCAN_API_KEY to .env.local file</p>
+            </div>
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-green-400 mb-4">
               <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm">Monitoring active for {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+              <span className="text-sm">Monitoring active for {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</span>
             </div>
 
             {transactions.length === 0 ? (
