@@ -5,7 +5,7 @@ import { TextGenerateEffect } from "./ui/text-generate-effect";
 import { HoverBorderGradient } from "./ui/hover-border-gradient";
 
 export function CryptoGuardHero() {
-  const words = "Transform BNB Chain from 'scary and complex' to 'safe and simple'";
+  const words = "Making cryptocurrency as safe and easy as online banking through intelligent automation";
   
   return (
     <div className="relative h-screen w-full bg-black/[0.96] antialiased bg-grid-white/[0.02] overflow-hidden">
@@ -16,11 +16,11 @@ export function CryptoGuardHero() {
       />
       <Spotlight
         className="top-10 left-full h-[80vh] w-[50vw]"
-        fill="#F0B90B"
+        fill="#10B981"
       />
       <Spotlight
         className="top-28 left-80 h-[80vh] w-[50vw]"
-        fill="#F0B90B"
+        fill="#3B82F6"
       />
       
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-4">
@@ -34,8 +34,8 @@ export function CryptoGuardHero() {
           <h1 className="text-4xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-400 bg-opacity-50">
             CryptoGuard AI
           </h1>
-          <p className="text-xl md:text-2xl text-yellow-400 font-semibold mt-4">
-            BNB Chain Security Platform
+          <p className="text-xl md:text-2xl text-green-400 font-semibold mt-4">
+            AI-Powered Crypto Protection Platform
           </p>
           <div className="mt-8 max-w-4xl">
             <TextGenerateEffect words={words} className="text-lg md:text-xl" />
@@ -47,11 +47,12 @@ export function CryptoGuardHero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-8 max-w-2xl text-center"
+          className="mt-8 max-w-3xl text-center"
         >
           <p className="text-neutral-300 text-lg">
-            With <span className="text-red-400 font-semibold">$3.8B+ lost</span> to crypto scams and hacks on BSC, 
-            we&apos;re building the first AI-powered platform specifically for <span className="text-yellow-400 font-semibold">BNB Chain security</span>.
+            With <span className="text-red-400 font-semibold">$3.8B+ lost annually</span> to crypto scams and 
+            <span className="text-yellow-400 font-semibold"> 99% of people</span> finding crypto too complex, 
+            we&apos;re building the first comprehensive AI protection platform.
           </p>
         </motion.div>
 
@@ -60,23 +61,48 @@ export function CryptoGuardHero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-neutral-400"
+          className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-neutral-400 max-w-4xl"
         >
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500"></div>
-            <span>BNB Chain AI Security Scanning</span>
+          <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-green-500/5 border border-green-500/20">
+            <div className="h-3 w-3 rounded-full bg-green-500"></div>
+            <span className="text-center">AI Security Scanner</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-yellow-400"></div>
-            <span>BEP-20 Contract Auditing</span>
+          <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
+            <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+            <span className="text-center">Contract Auditor</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-            <span>BSC Transaction Monitoring</span>
+          <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+            <div className="h-3 w-3 rounded-full bg-purple-500"></div>
+            <span className="text-center">Smart Translator</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-purple-500"></div>
-            <span>PancakeSwap Safety Analysis</span>
+          <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-orange-500/5 border border-orange-500/20">
+            <div className="h-3 w-3 rounded-full bg-orange-500"></div>
+            <span className="text-center">Market Guardian</span>
+          </div>
+        </motion.div>
+
+        {/* Impact metrics */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="mt-8 flex flex-wrap justify-center gap-8 text-center max-w-4xl"
+        >
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-green-400">80%+</span>
+            <span className="text-xs text-neutral-500">Losses Prevented</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-blue-400">100M+</span>
+            <span className="text-xs text-neutral-500">Target Users</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-purple-400">$2T+</span>
+            <span className="text-xs text-neutral-500">Market Size</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-orange-400">&lt;3s</span>
+            <span className="text-xs text-neutral-500">Threat Detection</span>
           </div>
         </motion.div>
 
