@@ -20,35 +20,51 @@ export default function SmartTranslator() {
   const [result, setResult] = useState<TranslationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mode, setMode] = useState<"term" | "text">("term");
+  const [allTranslations, setAllTranslations] = useState<any[]>([]);
 
   const handleTranslate = async () => {
     if (!term.trim()) return;
     
     setLoading(true);
     setError("");
+    setResult(null);
+    setAllTranslations([]);
     
     try {
       const response = await fetch('/api/translator/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: term.trim(), mode: 'term' })
+        body: JSON.stringify({ text: term.trim(), mode })
       });
       
       if (!response.ok) throw new Error('Translation failed');
       
       const data = await response.json();
-      const firstTranslation = data.translations?.[0];
-      if (firstTranslation) {
-        // Convert API response format to component format
-        setResult({
-          simplified: firstTranslation.simpleDef,
-          technical: firstTranslation.technicalDef,
-          examples: [firstTranslation.example],
-          riskLevel: firstTranslation.riskLevel.toLowerCase() as "low" | "medium" | "high",
-          explanation: `${firstTranslation.simpleDef} ${firstTranslation.technicalDef}`,
-          tradingTips: firstTranslation.relatedTerms?.map(term => `Learn about: ${term}`)
-        });
+      
+      if (mode === 'term') {
+        // Single term mode - show first result in detail
+        const firstTranslation = data.translations?.[0];
+        if (firstTranslation) {
+          setResult({
+            simplified: firstTranslation.simpleDef,
+            technical: firstTranslation.technicalDef,
+            examples: [firstTranslation.example],
+            riskLevel: firstTranslation.riskLevel.toLowerCase() as "low" | "medium" | "high",
+            explanation: `${firstTranslation.simpleDef} ${firstTranslation.technicalDef}`,
+            tradingTips: firstTranslation.relatedTerms?.map(term => `Learn about: ${term}`)
+          });
+        }
       } else {
+        // Text analysis mode - show all translations found
+        if (data.translations && data.translations.length > 0) {
+          setAllTranslations(data.translations);
+        } else {
+          throw new Error('No crypto terms found in the text');
+        }
+      }
+      
+      if (!data.translations || data.translations.length === 0) {
         throw new Error('No translation found');
       }
     } catch (err) {
@@ -98,6 +114,53 @@ export default function SmartTranslator() {
           </p>
         </motion.div>
 
+        {/* Mode Selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="max-w-2xl mx-auto mb-8"
+        >
+          <div className="flex items-center justify-center">
+            <div className="bg-gray-900/50 p-1 rounded-xl border border-gray-700">
+              <button
+                onClick={() => setMode('term')}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  mode === 'term'
+                    ? 'bg-purple-600 text-white shadow-lg'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <IconSparkles className="w-4 h-4" />
+                  <span>Single Term</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setMode('text')}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  mode === 'text'
+                    ? 'bg-purple-600 text-white shadow-lg'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <IconBulb className="w-4 h-4" />
+                  <span>Analyze Text</span>
+                </div>
+              </button>
+            </div>
+          </div>
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-400">
+              {mode === 'term' 
+                ? 'Translate individual crypto terms and get detailed explanations'
+                : 'Analyze full text content and extract all crypto terms with explanations'
+              }
+            </p>
+          </div>
+        </motion.div>
+
         {/* Search Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -109,15 +172,25 @@ export default function SmartTranslator() {
             <div className="bg-black rounded-2xl p-8">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
-                  <IconSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
-                  <input
-                    type="text"
-                    value={term}
-                    onChange={(e) => setTerm(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleTranslate()}
-                    placeholder="Enter crypto term (e.g., 'yield farming', 'liquidity pool')"
-                    className="w-full pl-14 pr-6 py-4 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
-                  />
+                  <IconSearch className="absolute left-4 top-4 text-gray-400 w-6 h-6" />
+                  {mode === 'term' ? (
+                    <input
+                      type="text"
+                      value={term}
+                      onChange={(e) => setTerm(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleTranslate()}
+                      placeholder="Enter crypto term (e.g., 'yield farming', 'liquidity pool')"
+                      className="w-full pl-14 pr-6 py-4 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
+                    />
+                  ) : (
+                    <textarea
+                      value={term}
+                      onChange={(e) => setTerm(e.target.value)}
+                      placeholder="Paste crypto content to analyze (e.g., whitepaper, article, recommendation)"
+                      rows={4}
+                      className="w-full pl-14 pr-6 py-4 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 resize-none"
+                    />
+                  )}
                 </div>
                 <div className={`${loading || !term.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <HoverBorderGradient
@@ -265,6 +338,92 @@ export default function SmartTranslator() {
 
               </div>
             </BackgroundGradient>
+          </motion.div>
+        )}
+
+        {/* Text Analysis Results - Multiple Terms */}
+        {allTranslations.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="max-w-6xl mx-auto"
+          >
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-white mb-2">
+                Found {allTranslations.length} crypto term{allTranslations.length > 1 ? 's' : ''} in your text
+              </h3>
+              <p className="text-gray-400">
+                Click on any term below to learn more about it
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {allTranslations.map((translation, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                >
+                  <BackgroundGradient className="rounded-2xl p-1">
+                    <div className="bg-black rounded-2xl p-6 h-full">
+                      {/* Term Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold text-white">
+                          {translation.term}
+                        </h4>
+                        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getRiskColor(translation.riskLevel.toLowerCase())}`}>
+                          {getRiskIcon(translation.riskLevel.toLowerCase())}
+                          <span>{translation.riskLevel}</span>
+                        </div>
+                      </div>
+
+                      {/* Simple Definition */}
+                      <div className="mb-4">
+                        <h5 className="text-sm font-medium text-gray-400 mb-2">Simple Explanation</h5>
+                        <p className="text-gray-300 text-sm leading-relaxed">
+                          {translation.simpleDef}
+                        </p>
+                      </div>
+
+                      {/* Technical Definition */}
+                      <div className="mb-4">
+                        <h5 className="text-sm font-medium text-gray-400 mb-2">Technical Definition</h5>
+                        <p className="text-gray-300 text-sm leading-relaxed">
+                          {translation.technicalDef}
+                        </p>
+                      </div>
+
+                      {/* Example */}
+                      <div className="mb-4">
+                        <h5 className="text-sm font-medium text-gray-400 mb-2">Example</h5>
+                        <p className="text-gray-300 text-sm leading-relaxed italic">
+                          {translation.example}
+                        </p>
+                      </div>
+
+                      {/* Related Terms */}
+                      {translation.relatedTerms && translation.relatedTerms.length > 0 && (
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-400 mb-2">Related Terms</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {translation.relatedTerms.slice(0, 3).map((relatedTerm, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs"
+                              >
+                                {relatedTerm}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </BackgroundGradient>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         )}
 
