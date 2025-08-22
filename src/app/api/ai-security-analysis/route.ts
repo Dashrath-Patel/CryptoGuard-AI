@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 interface Transaction {
@@ -39,14 +39,14 @@ export async function POST(request: NextRequest) {
     console.log('Wallet balance:', balance);
     console.log('Risk factors:', riskFactors?.length || 0);
     console.log('Wallet address:', walletAddress);
-    console.log('Gemini API Key present:', !!process.env.GEMINI_API_KEY);
-    console.log('Gemini API Key first 10 chars:', process.env.GEMINI_API_KEY?.substring(0, 10));
+    console.log('Gemini API Key present:', !!process.env.GOOGLE_AI_API_KEY);
+    console.log('Gemini API Key first 10 chars:', process.env.GOOGLE_AI_API_KEY?.substring(0, 10));
 
     if (!transactions || !Array.isArray(transactions)) {
       return NextResponse.json({ error: 'Invalid transactions data' }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GOOGLE_AI_API_KEY) {
       console.error('MISSING: Gemini API key not found in environment variables');
       return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
     }
@@ -84,8 +84,26 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('AI Security Analysis Error:', error);
+    
+    // Check for specific API key errors
+    if (error instanceof Error && error.message.includes('API key not valid')) {
+      return NextResponse.json(
+        { 
+          error: 'Invalid Gemini API Key',
+          details: 'Please get a valid API key from https://makersuite.google.com/app/apikey and add it to your .env file as GOOGLE_AI_API_KEY',
+          timestamp: new Date().toISOString()
+        },
+        { status: 401 }
+      );
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: 'Failed to generate AI security analysis' },
+      { 
+        error: 'Failed to generate AI security analysis',
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
@@ -227,7 +245,8 @@ function prepareTransactionSummary(transactions: Transaction[], walletAddress: s
 }
 
 async function generateAIAnalysis(comprehensiveData: any) {
-  const prompt = `
+  try {
+    const prompt = `
 You are CryptoGuard AI, an expert blockchain security analyst specializing in BSC (Binance Smart Chain) wallet security. 
 
 Analyze the following COMPREHENSIVE wallet data and provide detailed security recommendations:
@@ -289,9 +308,13 @@ Focus on:
 Provide specific, actionable recommendations that address the unique risk profile of this wallet.
 `;
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  return response.text();
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Gemini AI API Error:', error);
+    throw new Error(`Failed to generate AI analysis: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 function parseAIRecommendations(analysis: string): SecurityRecommendation[] {

@@ -209,9 +209,17 @@ const AISecurityRecommendations: React.FC = () => {
         console.log('AI analysis received:', aiData);
         setAnalysis(aiData);
       } else {
-        const errorText = await aiResponse.text();
-        console.error('AI API error:', errorText);
-        throw new Error(`AI analysis failed: ${errorText}`);
+        const errorData = await aiResponse.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('AI API error:', errorData);
+        
+        // Show specific error messages based on the error type
+        if (aiResponse.status === 401 && errorData.details?.includes('API key')) {
+          throw new Error('🔑 Invalid Gemini API Key. Please get a valid API key from https://makersuite.google.com/app/apikey');
+        } else if (errorData.details) {
+          throw new Error(errorData.details);
+        } else {
+          throw new Error(`AI analysis failed: ${errorData.error || 'Unknown error'}`);
+        }
       }
       
     } catch (err) {

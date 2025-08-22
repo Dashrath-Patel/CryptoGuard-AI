@@ -8,7 +8,10 @@ import {
   IconCircleCheck, 
   IconClock,
   IconActivity,
-  IconWallet
+  IconWallet,
+  IconArrowUp,
+  IconArrowDown,
+  IconRefresh
 } from "@tabler/icons-react";
 
 interface MonitoredTransaction {
@@ -19,6 +22,8 @@ interface MonitoredTransaction {
   timestamp: Date;
   riskLevel: 'low' | 'medium' | 'high';
   status: 'pending' | 'confirmed' | 'failed';
+  type: 'sent' | 'received' | 'internal';
+  direction: 'in' | 'out';
 }
 
 export function TransactionMonitor() {
@@ -59,15 +64,47 @@ export function TransactionMonitor() {
           // Get user transactions from the correct data structure
           if (data.userWallet && data.userWallet.recentTransactions && data.userWallet.recentTransactions.length > 0) {
             const userTransactions = data.userWallet.recentTransactions
-              .map((tx: any) => ({
-                hash: tx.hash,
-                from: tx.from.toLowerCase() === walletAddress.toLowerCase() ? 'Your Wallet' : tx.from,
-                to: tx.to.toLowerCase() === walletAddress.toLowerCase() ? 'Your Wallet' : tx.to,
-                value: `${tx.value.toFixed(6)} BNB`,
-                timestamp: new Date(tx.timestamp),
-                riskLevel: tx.valueUSD > 50000 ? 'high' : tx.valueUSD > 10000 ? 'medium' : 'low',
-                status: tx.status === 'success' ? 'confirmed' as const : 'failed' as const
-              }));
+              .map((tx: any) => {
+                const isFromUser = tx.from.toLowerCase() === walletAddress.toLowerCase();
+                const isToUser = tx.to.toLowerCase() === walletAddress.toLowerCase();
+                
+                let type: 'sent' | 'received' | 'internal';
+                let direction: 'in' | 'out';
+                let fromDisplay: string;
+                let toDisplay: string;
+                
+                if (isFromUser && isToUser) {
+                  // Self transaction
+                  type = 'internal';
+                  direction = 'out';
+                  fromDisplay = 'Your Wallet';
+                  toDisplay = 'Your Wallet (Self)';
+                } else if (isFromUser) {
+                  // Sent transaction
+                  type = 'sent';
+                  direction = 'out';
+                  fromDisplay = 'Your Wallet';
+                  toDisplay = `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`;
+                } else {
+                  // Received transaction
+                  type = 'received';
+                  direction = 'in';
+                  fromDisplay = `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`;
+                  toDisplay = 'Your Wallet';
+                }
+                
+                return {
+                  hash: tx.hash,
+                  from: fromDisplay,
+                  to: toDisplay,
+                  value: `${tx.value.toFixed(6)} BNB`,
+                  timestamp: new Date(tx.timestamp),
+                  riskLevel: tx.valueUSD > 50000 ? 'high' : tx.valueUSD > 10000 ? 'medium' : 'low',
+                  status: tx.status === 'success' ? 'confirmed' as const : 'failed' as const,
+                  type,
+                  direction
+                };
+              });
 
             if (userTransactions.length > 0) {
               setTransactions(userTransactions);
@@ -189,6 +226,39 @@ export function TransactionMonitor() {
               <span className="text-sm">Monitoring active for {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</span>
             </div>
 
+            {/* Transaction Summary */}
+            {transactions.length > 0 && (
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
+                  <div className="flex items-center justify-center gap-1 text-green-400 mb-1">
+                    <IconArrowDown className="h-4 w-4" />
+                    <span className="text-xs font-medium">Received</span>
+                  </div>
+                  <div className="text-lg font-bold text-white">
+                    {transactions.filter(tx => tx.direction === 'in').length}
+                  </div>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center">
+                  <div className="flex items-center justify-center gap-1 text-red-400 mb-1">
+                    <IconArrowUp className="h-4 w-4" />
+                    <span className="text-xs font-medium">Sent</span>
+                  </div>
+                  <div className="text-lg font-bold text-white">
+                    {transactions.filter(tx => tx.direction === 'out').length}
+                  </div>
+                </div>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-center">
+                  <div className="flex items-center justify-center gap-1 text-blue-400 mb-1">
+                    <IconRefresh className="h-4 w-4" />
+                    <span className="text-xs font-medium">Total</span>
+                  </div>
+                  <div className="text-lg font-bold text-white">
+                    {transactions.length}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {transactions.length === 0 ? (
               <div className="text-center text-neutral-400 py-8">
                 <IconClock className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -205,7 +275,27 @@ export function TransactionMonitor() {
                     className={`p-4 rounded-lg border ${getRiskBg(tx.riskLevel)}`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-mono text-blue-400">{tx.hash}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-mono text-blue-400">{tx.hash.slice(0, 10)}...{tx.hash.slice(-6)}</span>
+                        {/* Direction Indicator */}
+                        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          tx.direction === 'in' 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {tx.direction === 'in' ? (
+                            <>
+                              <IconArrowDown className="h-3 w-3" />
+                              <span>Received</span>
+                            </>
+                          ) : (
+                            <>
+                              <IconArrowUp className="h-3 w-3" />
+                              <span>Sent</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs px-2 py-1 rounded ${getRiskColor(tx.riskLevel)} bg-opacity-20`}>
                           {tx.riskLevel} risk
@@ -220,10 +310,12 @@ export function TransactionMonitor() {
                     </div>
                     
                     <div className="text-sm text-neutral-400 space-y-1">
-                      <div>From: {tx.from === walletAddress ? 'Your Wallet' : `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`}</div>
-                      <div>To: {tx.to === walletAddress ? 'Your Wallet' : `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`}</div>
                       <div className="flex items-center justify-between">
-                        <span>Value: {tx.value}</span>
+                        <span>From: <span className="text-neutral-300">{tx.from}</span></span>
+                        <span>To: <span className="text-neutral-300">{tx.to}</span></span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-white">Value: {tx.value}</span>
                         <span>{tx.timestamp.toLocaleTimeString()}</span>
                       </div>
                     </div>
