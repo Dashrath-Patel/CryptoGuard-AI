@@ -1,7 +1,6 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-
-import { motion } from "motion/react";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 type Direction = "TOP" | "LEFT" | "BOTTOM" | "RIGHT";
@@ -13,6 +12,8 @@ export function HoverBorderGradient({
   as: Tag = "button",
   duration = 1,
   clockwise = true,
+  onMouseEnter: propOnMouseEnter,
+  onMouseLeave: propOnMouseLeave,
   ...props
 }: React.PropsWithChildren<
   {
@@ -21,10 +22,22 @@ export function HoverBorderGradient({
     className?: string;
     duration?: number;
     clockwise?: boolean;
-  } & React.HTMLAttributes<HTMLElement>
+    onMouseEnter?: React.MouseEventHandler<HTMLElement>;
+    onMouseLeave?: React.MouseEventHandler<HTMLElement>;
+  } & Omit<React.HTMLAttributes<HTMLElement>, 'onMouseEnter' | 'onMouseLeave'>
 >) {
   const [hovered, setHovered] = useState<boolean>(false);
   const [direction, setDirection] = useState<Direction>("TOP");
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {
+    setHovered(true);
+    propOnMouseEnter?.(e);
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
+    setHovered(false);
+    propOnMouseLeave?.(e);
+  };
 
   const rotateDirection = (currentDirection: Direction): Direction => {
     const directions: Direction[] = ["TOP", "LEFT", "BOTTOM", "RIGHT"];
@@ -45,7 +58,10 @@ export function HoverBorderGradient({
   };
 
   const highlight =
-    "radial-gradient(75% 181.15942028985506% at 50% 50%, #3275F8 0%, rgba(255, 255, 255, 0) 100%)";
+    "radial-gradient(75% 181.15942028985506% at 50% 50%, #3275F8 0%, rgba(50, 117, 248, 0.4) 50%, rgba(255, 255, 255, 0) 100%)";
+
+  const glowHighlight = 
+    "radial-gradient(90% 200% at 50% 50%, rgba(50, 117, 248, 0.8) 0%, rgba(147, 51, 234, 0.6) 30%, rgba(59, 130, 246, 0.4) 60%, rgba(255, 255, 255, 0) 100%)";
 
   useEffect(() => {
     if (!hovered) {
@@ -54,25 +70,53 @@ export function HoverBorderGradient({
       }, duration * 1000);
       return () => clearInterval(interval);
     }
-  }, [hovered]);
+  }, [hovered, duration, clockwise]);
+
+  // Cast Tag to any to avoid TypeScript errors with dynamic components
+  const Component = Tag as any;
+
   return (
-    <Tag
-      onMouseEnter={(event: React.MouseEvent<HTMLDivElement>) => {
-        setHovered(true);
-      }}
-      onMouseLeave={() => setHovered(false)}
+    <Component 
+      onMouseEnter={handleMouseEnter} 
+      onMouseLeave={handleMouseLeave}
       className={cn(
-        "relative flex rounded-full border  content-center bg-black/20 hover:bg-black/10 transition duration-500 dark:bg-white/20 items-center flex-col flex-nowrap gap-10 h-min justify-center overflow-visible p-px decoration-clone w-fit",
+        "relative flex rounded-full border content-center bg-black/20 hover:bg-black/10 transition-all duration-500 dark:bg-white/20 items-center flex-col flex-nowrap gap-10 h-min justify-center overflow-visible p-px decoration-clone w-fit hover:shadow-2xl hover:shadow-blue-500/30 cursor-pointer",
         containerClassName
       )}
       {...props}
     >
+      {/* Enhanced glow effect on hover */}
+      <motion.div
+        className="absolute inset-0 rounded-full opacity-0 transition-opacity duration-500"
+        animate={{
+          opacity: hovered ? 0.6 : 0,
+          scale: hovered ? 1.1 : 1,
+        }}
+        style={{
+          background: glowHighlight,
+          filter: "blur(20px)",
+          zIndex: -1,
+        }}
+      />
+      
       <div
         className={cn(
-          "w-auto text-white z-10 bg-black px-4 py-2 rounded-[inherit]",
+          "w-auto text-white z-20 bg-black px-4 py-2 rounded-[inherit] relative overflow-hidden",
           className
         )}
       >
+        {/* Shimmer effect on hover */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 -skew-x-12"
+          animate={{
+            x: hovered ? ["100%", "-100%"] : "100%",
+            opacity: hovered ? [0, 1, 0] : 0,
+          }}
+          transition={{
+            duration: 0.8,
+            ease: "easeInOut",
+          }}
+        />
         {children}
       </div>
       <motion.div
@@ -88,12 +132,17 @@ export function HoverBorderGradient({
         initial={{ background: movingMap[direction] }}
         animate={{
           background: hovered
-            ? [movingMap[direction], highlight]
+            ? [movingMap[direction], highlight, glowHighlight]
             : movingMap[direction],
         }}
-        transition={{ ease: "linear", duration: duration ?? 1 }}
+        transition={{ 
+          ease: "linear", 
+          duration: duration, 
+          repeat: hovered ? Infinity : 0 
+        }}
       />
-      <div className="bg-black absolute z-1 flex-none inset-[2px] rounded-[100px]" />
-    </Tag>
+      {/* Background layer - lower z-index than text */}
+      <div className="bg-black absolute z-10 flex-none inset-[2px] rounded-[100px]" />
+    </Component>
   );
 }
