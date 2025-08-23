@@ -2,137 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI
-// Add rate limiting globals
-declare global {
-  var lastGeminiApiCall: number | undefined;
-  var geminiCallCount: number | undefined;
-  var dailyCallCount: number | undefined;
-  var dailyCallDate: string | undefined;
-}
-
-// Track daily API usage
-function trackDailyUsage() {
-  const today = new Date().toDateString();
-  
-  if (global.dailyCallDate !== today) {
-    global.dailyCallCount = 0;
-    global.dailyCallDate = today;
-  }
-  
-  global.dailyCallCount = (global.dailyCallCount || 0) + 1;
-  console.log(`📊 Daily API calls: ${global.dailyCallCount}/50`);
-  
-  return {
-    callsToday: global.dailyCallCount,
-    remainingCalls: Math.max(0, 50 - global.dailyCallCount),
-    willResetAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString()
-  };
-}
-
-async function generateAIAnalysis(data: any): Promise<string> {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  
-  console.log('🤖 Starting AI analysis with Gemini...');
-  
-  // Track daily usage
-  const dailyUsage = trackDailyUsage();
-  
-  if (dailyUsage.remainingCalls <= 0) {
-    throw new Error(`Daily quota exceeded. ${dailyUsage.callsToday}/50 calls used today. Quota resets at ${dailyUsage.willResetAt}`);
-  }
-  
-  // Check for recent API calls to prevent quota issues
-  const lastApiCall = global.lastGeminiApiCall || 0;
-  const timeSinceLastCall = Date.now() - lastApiCall;
-  const minInterval = 2000; // 2 seconds between calls
-  
-  if (timeSinceLastCall < minInterval) {
-    console.log(`⏳ Rate limiting: waiting ${minInterval - timeSinceLastCall}ms`);
-    await new Promise(resolve => setTimeout(resolve, minInterval - timeSinceLastCall));
-  }
-  
-  global.lastGeminiApiCall = Date.now();
-  global.geminiCallCount = (global.geminiCallCount || 0) + 1;
-  
-  console.log(`📊 API Call #${global.geminiCallCount} starting... (${dailyUsage.remainingCalls} calls remaining today)`);
-  
-  const prompt = `
-You are CryptoGuard AI, an expert blockchain security analyst specializing in BSC (Binance Smart Chain) wallet security. 
-
-Analyze the following COMPREHENSIVE wallet data and provide detailed security recommendations:
-
-📊 WALLET OVERVIEW:
-- Address: ${data.walletAddress}
-- Current Balance: ${data.balance.bnb} BNB
-- Security Score: ${data.securityIndicators.securityScore}/100
-
-🔄 TRANSACTION ANALYSIS:
-- Total Transactions: ${data.transactionAnalysis.totalTransactions}
-- Recent Transactions: ${data.transactionAnalysis.recentCount}
-- Failed Transactions: ${data.transactionAnalysis.failedTransactions}
-- Average Gas Used: ${data.transactionAnalysis.averageGasUsed}
-- High-Value Transactions: ${data.transactionAnalysis.highValueTransactions}
-- Total Value Transferred: ${data.transactionAnalysis.totalValue.toFixed(4)} BNB
-- Unique Contracts: ${data.transactionAnalysis.uniqueContracts.length}
-
-🪙 TOKEN ACTIVITY:
-- Token Transfers: ${data.tokenActivity.totalTokenTransfers}
-- Unique Tokens: ${data.tokenActivity.uniqueTokens.length}
-- Recent Token Activity: ${JSON.stringify(data.tokenActivity.recentTokenTransfers, null, 2)}
-
-🔧 CONTRACT INTERACTIONS:
-- Internal Transactions: ${data.internalActivity.totalInternalTransactions}
-- Contract Calls: ${data.internalActivity.contractCalls}
-- Contract Creates: ${data.internalActivity.creates}
-
-⚠️ SECURITY INDICATORS:
-- Risk Factors: ${JSON.stringify(data.securityIndicators.riskFactors, null, 2)}
-- Suspicious Patterns: ${JSON.stringify(data.securityIndicators.suspiciousPatterns, null, 2)}
-
-📋 RECENT ACTIVITY:
-${JSON.stringify(data.recentActivity, null, 2)}
-
-Please provide a COMPREHENSIVE SECURITY ANALYSIS with:
-
-1. **SECURITY RISK ASSESSMENT** (Critical/High/Medium/Low) - Based on ALL data sources
-2. **KEY FINDINGS** - Multi-dimensional analysis covering:
-   - Transaction behavior patterns
-   - Token interaction risks
-   - Contract security concerns
-   - Balance management issues
-3. **SECURITY RECOMMENDATIONS** - Specific actionable advice
-4. **DEFI PROTOCOL ANALYSIS** - Safety assessment of interacted protocols
-5. **TOKEN PORTFOLIO SECURITY** - Assessment of held/transferred tokens
-6. **BEST PRACTICES** - Tailored BSC wallet security recommendations
-
-Focus on:
-- Cross-referencing transaction patterns with token activities
-- Identifying high-risk DeFi protocol interactions
-- Detecting potential MEV attacks or sandwich attacks
-- Analyzing gas optimization opportunities
-- Token approval security risks
-- Multi-signature wallet recommendations
-- Hardware wallet security advice
-- Smart contract interaction safety
-
-Provide specific, actionable recommendations that address the unique risk profile of this wallet.
-`;
-
-  try {
-    console.log('🚀 Sending request to Gemini API...');
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    console.log('✅ AI analysis completed successfully');
-    return text;
-  } catch (error: any) {
-    console.error('❌ Gemini API error:', error);
-    // Re-throw with additional context
-    throw new Error(`Gemini API error: ${error.message} (Status: ${error.status || 'unknown'})`);
-  }
-}
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 interface Transaction {
@@ -159,10 +29,8 @@ interface SecurityRecommendation {
 }
 
 export async function POST(request: NextRequest) {
-  let transactions: any, tokenTransfers: any, internalTransactions: any, balance: any, riskFactors: any, walletAddress: any;
-  
   try {
-    ({ transactions, tokenTransfers, internalTransactions, balance, riskFactors, walletAddress } = await request.json());
+    const { transactions, tokenTransfers, internalTransactions, balance, riskFactors, walletAddress } = await request.json();
 
     console.log('=== AI Security Analysis Debug ===');
     console.log('Transactions received:', transactions?.length || 0);
@@ -171,14 +39,14 @@ export async function POST(request: NextRequest) {
     console.log('Wallet balance:', balance);
     console.log('Risk factors:', riskFactors?.length || 0);
     console.log('Wallet address:', walletAddress);
-    console.log('Gemini API Key present:', !!process.env.GOOGLE_AI_API_KEY);
-    console.log('Gemini API Key first 10 chars:', process.env.GOOGLE_AI_API_KEY?.substring(0, 10));
+    console.log('Gemini API Key present:', !!process.env.GEMINI_API_KEY);
+    console.log('Gemini API Key first 10 chars:', process.env.GEMINI_API_KEY?.substring(0, 10));
 
     if (!transactions || !Array.isArray(transactions)) {
       return NextResponse.json({ error: 'Invalid transactions data' }, { status: 400 });
     }
 
-    if (!process.env.GOOGLE_AI_API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
       console.error('MISSING: Gemini API key not found in environment variables');
       return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
     }
@@ -193,34 +61,11 @@ export async function POST(request: NextRequest) {
       walletAddress
     });
     
-    // Generate AI analysis with fallback
-    let analysis: string;
-    let recommendations: SecurityRecommendation[];
-    let usingFallback = false;
+    // Generate AI analysis
+    const analysis = await generateAIAnalysis(comprehensiveData);
     
-    try {
-      analysis = await generateAIAnalysis(comprehensiveData);
-      recommendations = parseAIRecommendations(analysis);
-      console.log('✅ AI analysis generated successfully');
-    } catch (aiError: any) {
-      console.error('❌ AI analysis failed:', aiError);
-      usingFallback = true;
-      
-      // Check if it's a quota error
-      if (aiError.status === 429 || aiError.message?.includes('quota') || aiError.message?.includes('Too Many Requests')) {
-        console.log('🔄 Quota exceeded, using fallback analysis');
-        // Use fallback analysis based on transaction patterns
-        const fallbackResult = generateFallbackAnalysis(comprehensiveData);
-        analysis = fallbackResult.analysis;
-        recommendations = fallbackResult.recommendations;
-      } else {
-        // For other errors, still provide basic analysis
-        console.log('🔄 AI error, using basic analysis');
-        const fallbackResult = generateFallbackAnalysis(comprehensiveData);
-        analysis = fallbackResult.analysis;
-        recommendations = fallbackResult.recommendations;
-      }
-    }
+    // Parse AI response into structured recommendations
+    const recommendations = parseAIRecommendations(analysis);
 
     return NextResponse.json({
       success: true,
@@ -233,47 +78,16 @@ export async function POST(request: NextRequest) {
         walletBalance: balance,
         riskFactors: riskFactors?.length || 0,
         analysisTimestamp: new Date().toISOString(),
-        walletAddress,
-        usingFallback,
-        fallbackReason: usingFallback ? 'AI API quota exceeded - using pattern-based analysis' : null
+        walletAddress
       }
     });
 
-  } catch (error: any) {
-    console.error('💥 AI Security Analysis Error:', error);
-    
-    // Even if there's an error, try to provide fallback analysis
-    try {
-      console.log('🔄 Attempting emergency fallback analysis...');
-      const fallbackResult = generateFallbackAnalysis({ transactions, tokenTransfers, internalTransactions, balance, riskFactors, walletAddress });
-      
-      return NextResponse.json({
-        success: true,
-        analysis: fallbackResult.analysis,
-        recommendations: fallbackResult.recommendations,
-        metadata: {
-          totalTransactions: transactions?.length || 0,
-          totalTokenTransfers: tokenTransfers?.length || 0,
-          totalInternalTransactions: internalTransactions?.length || 0,
-          walletBalance: balance,
-          riskFactors: riskFactors?.length || 0,
-          analysisTimestamp: new Date().toISOString(),
-          walletAddress,
-          usingFallback: true,
-          fallbackReason: 'System error occurred - emergency fallback analysis provided'
-        }
-      });
-    } catch (fallbackError) {
-      console.error('❌ Even fallback analysis failed:', fallbackError);
-      return NextResponse.json(
-        { 
-          error: 'Failed to generate AI security analysis',
-          details: 'Both AI and fallback analysis failed. Please try again later.',
-          suggestion: 'Try refreshing the page or contact support if the issue persists.'
-        },
-        { status: 500 }
-      );
-    }
+  } catch (error) {
+    console.error('AI Security Analysis Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to generate AI security analysis' },
+      { status: 500 }
+    );
   }
 }
 
@@ -409,152 +223,75 @@ function prepareTransactionSummary(transactions: Transaction[], walletAddress: s
     }))
   };
 
+  return summary;
 }
 
-// Fallback analysis when AI API is unavailable or quota exceeded
-function generateFallbackAnalysis(data: any): { analysis: string; recommendations: SecurityRecommendation[] } {
-  const { transactions, tokenTransfers, internalTransactions, balance, riskFactors, walletAddress } = data;
-  
-  console.log('🔄 Generating fallback analysis...');
-  
-  // Calculate basic metrics
-  const totalTx = transactions?.length || 0;
-  const totalTokenTransfers = tokenTransfers?.length || 0;
-  const totalInternal = internalTransactions?.length || 0;
-  const walletBalanceEth = balance?.raw ? parseFloat(balance.raw) / 1e18 : 0;
-  const riskCount = riskFactors?.length || 0;
-  
-  // Analyze transaction patterns
-  const recentTxs = transactions?.slice(0, 10) || [];
-  const hasHighValueTxs = recentTxs.some((tx: any) => parseFloat(tx.value || '0') > 1e18); // > 1 ETH equivalent
-  const hasFrequentTxs = totalTx > 50;
-  const hasTokenActivity = totalTokenTransfers > 0;
-  const hasInternalActivity = totalInternal > 0;
-  
-  // Generate risk-based analysis
-  let riskLevel = 'LOW';
-  let riskScore = 0;
-  
-  if (riskCount >= 5) {
-    riskLevel = 'HIGH';
-    riskScore = 8;
-  } else if (riskCount >= 3) {
-    riskLevel = 'MEDIUM';
-    riskScore = 5;
-  } else if (riskCount >= 1) {
-    riskLevel = 'LOW-MEDIUM';
-    riskScore = 3;
-  }
-  
-  // Generate analysis text
-  const analysis = `
-🛡️ **CRYPTOGUARD AI SECURITY ANALYSIS** (Fallback Mode)
-⚠️ **Note**: Advanced AI analysis temporarily unavailable due to API quotas. Using pattern-based analysis.
-📅 **AI Analysis Available**: Tomorrow after quota reset (50 requests per day limit)
+async function generateAIAnalysis(comprehensiveData: any) {
+  const prompt = `
+You are CryptoGuard AI, an expert blockchain security analyst specializing in BSC (Binance Smart Chain) wallet security. 
 
-**WALLET OVERVIEW**
-• Address: ${walletAddress}
-• Balance: ${walletBalanceEth.toFixed(4)} BNB
-• Total Transactions: ${totalTx}
-• Token Transfers: ${totalTokenTransfers}
-• Internal Transactions: ${totalInternal}
+Analyze the following COMPREHENSIVE wallet data and provide detailed security recommendations:
 
-**SECURITY ASSESSMENT**
-• Risk Level: ${riskLevel}
-• Risk Score: ${riskScore}/10
-• Risk Factors Detected: ${riskCount}
+📊 WALLET OVERVIEW:
+- Address: ${comprehensiveData.walletAddress}
+- Current Balance: ${comprehensiveData.balance.bnb} BNB
+- Security Score: ${comprehensiveData.securityIndicators.securityScore}/100
 
-**AUTOMATED PATTERN ANALYSIS**
-Our automated systems have analyzed your transaction patterns:
+🔄 TRANSACTION ANALYSIS:
+- Total Transactions: ${comprehensiveData.transactionAnalysis.totalTransactions}
+- Recent Transactions: ${comprehensiveData.transactionAnalysis.recentCount}
+- Failed Transactions: ${comprehensiveData.transactionAnalysis.failedTransactions}
+- Average Gas Used: ${comprehensiveData.transactionAnalysis.averageGasUsed}
+- High-Value Transactions: ${comprehensiveData.transactionAnalysis.highValueTransactions}
+- Total Value Transferred: ${comprehensiveData.transactionAnalysis.totalValue.toFixed(4)} BNB
+- Unique Contracts: ${comprehensiveData.transactionAnalysis.uniqueContracts.length}
 
-${hasHighValueTxs ? '⚠️ **High-Value Transactions Detected**\n   Large transaction amounts identified - consider additional security measures like hardware wallets or multi-sig setups.' : '✅ **Transaction Values Normal**\n   Transaction amounts appear reasonable for typical usage.'}
+🪙 TOKEN ACTIVITY:
+- Token Transfers: ${comprehensiveData.tokenActivity.totalTokenTransfers}
+- Unique Tokens: ${comprehensiveData.tokenActivity.uniqueTokens.length}
+- Recent Token Activity: ${JSON.stringify(comprehensiveData.tokenActivity.recentTokenTransfers, null, 2)}
 
-${hasFrequentTxs ? '📊 **High Trading Activity**\n   Frequent transaction pattern suggests active trading. Consider:\n   • Using a dedicated trading wallet\n   • Implementing transaction limits\n   • Regular security audits' : '📊 **Moderate Activity Level**\n   Regular but not excessive transaction frequency detected.'}
+🔧 CONTRACT INTERACTIONS:
+- Internal Transactions: ${comprehensiveData.internalActivity.totalInternalTransactions}
+- Contract Calls: ${comprehensiveData.internalActivity.contractCalls}
+- Contract Creates: ${comprehensiveData.internalActivity.creates}
 
-${hasTokenActivity ? '🪙 **Token Activity Detected**\n   Token transfers found in your history:\n   • Monitor token approvals regularly\n   • Use tools like Revoke.cash to manage permissions\n   • Be cautious of unknown token contracts' : '🪙 **Limited Token Activity**\n   Primarily BNB transactions with minimal token interaction.'}
+⚠️ SECURITY INDICATORS:
+- Risk Factors: ${JSON.stringify(comprehensiveData.securityIndicators.riskFactors, null, 2)}
+- Suspicious Patterns: ${JSON.stringify(comprehensiveData.securityIndicators.suspiciousPatterns, null, 2)}
 
-${hasInternalActivity ? '🔄 **Smart Contract Interactions**\n   Multiple contract interactions detected:\n   • Review contract permissions\n   • Monitor for suspicious contract calls\n   • Consider contract interaction limits' : '🔄 **Direct Transfers Only**\n   Transactions appear to be direct wallet-to-wallet transfers.'}
+📋 RECENT ACTIVITY:
+${JSON.stringify(comprehensiveData.recentActivity, null, 2)}
 
-**RISK-BASED RECOMMENDATIONS**
-Based on transaction patterns, we recommend:
-• ${walletBalanceEth > 10 ? 'Consider using a hardware wallet for large holdings' : 'Current balance suitable for software wallet'}
-• ${hasTokenActivity ? 'Regularly review and revoke unused token approvals' : 'Monitor for future token approvals'}
-• ${riskCount > 0 ? 'Address identified risk factors immediately' : 'Maintain current security practices'}
-• Enable wallet notifications for large transactions
-• Use a separate wallet for DeFi activities if trading frequently
+Please provide a COMPREHENSIVE SECURITY ANALYSIS with:
 
-**NEXT STEPS**
-1. Review all identified risk factors
-2. Update wallet security settings
-3. Consider multi-signature setup for large holdings
-4. Monitor wallet activity regularly
+1. **SECURITY RISK ASSESSMENT** (Critical/High/Medium/Low) - Based on ALL data sources
+2. **KEY FINDINGS** - Multi-dimensional analysis covering:
+   - Transaction behavior patterns
+   - Token interaction risks
+   - Contract security concerns
+   - Balance management issues
+3. **SECURITY RECOMMENDATIONS** - Specific actionable advice
+4. **DEFI PROTOCOL ANALYSIS** - Safety assessment of interacted protocols
+5. **TOKEN PORTFOLIO SECURITY** - Assessment of held/transferred tokens
+6. **BEST PRACTICES** - Tailored BSC wallet security recommendations
 
-*This analysis was generated using pattern-based rules. For detailed AI insights, please try again when API quota resets.*
-  `.trim();
-  
-  // Generate basic recommendations
-  const recommendations: SecurityRecommendation[] = [
-    {
-      id: '1',
-      title: 'Review Risk Factors',
-      description: `${riskCount} risk factors detected in your wallet activity. Review and address these security concerns.`,
-      priority: riskCount > 3 ? 'high' : riskCount > 1 ? 'medium' : 'low',
-      category: 'security',
-      actionable: true,
-      recommendation: 'Check the risk factors section and take recommended actions'
-    },
-    {
-      id: '2',
-      title: 'Hardware Wallet Recommendation',
-      description: walletBalanceEth > 10 
-        ? 'Your wallet holds significant funds. Consider using a hardware wallet for enhanced security.'
-        : 'As your holdings grow, consider upgrading to a hardware wallet.',
-      priority: walletBalanceEth > 10 ? 'high' : 'medium',
-      category: 'security',
-      actionable: true,
-      recommendation: 'Research Ledger or Trezor hardware wallets'
-    },
-    {
-      id: '3',
-      title: 'Enable Transaction Monitoring',
-      description: 'Set up alerts for large transactions and suspicious activities.',
-      priority: 'medium',
-      category: 'security',
-      actionable: true,
-      recommendation: 'Configure wallet notifications and monitoring tools'
-    }
-  ];
-  
-  if (hasTokenActivity) {
-    recommendations.push({
-      id: '4',
-      title: 'Token Approval Management',
-      description: 'Token transfer activity detected. Regularly review and revoke unused token approvals.',
-      priority: 'medium',
-      category: 'token',
-      actionable: true,
-      recommendation: 'Use tools like Revoke.cash to manage token approvals'
-    });
-  }
-  
-  if (hasFrequentTxs) {
-    recommendations.push({
-      id: '5',
-      title: 'Separate Trading Wallet',
-      description: 'High transaction frequency detected. Consider using a separate wallet for trading activities.',
-      priority: 'low',
-      category: 'security',
-      actionable: true,
-      recommendation: 'Create dedicated wallets for different activities (trading, holding, DeFi)'
-    });
-  }
-  
-  console.log('✅ Fallback analysis generated successfully');
-  
-  return {
-    analysis,
-    recommendations
-  };
+Focus on:
+- Cross-referencing transaction patterns with token activities
+- Identifying high-risk DeFi protocol interactions
+- Detecting potential MEV attacks or sandwich attacks
+- Analyzing gas optimization opportunities
+- Token approval security risks
+- Multi-signature wallet recommendations
+- Hardware wallet security advice
+- Smart contract interaction safety
+
+Provide specific, actionable recommendations that address the unique risk profile of this wallet.
+`;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text();
 }
 
 function parseAIRecommendations(analysis: string): SecurityRecommendation[] {
